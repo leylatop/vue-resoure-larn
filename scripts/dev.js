@@ -4,7 +4,7 @@
 const fs = require('fs');
 const execa = require('execa'); // 开启子进程进行打包，最终还是使用rollup来打包
 
-// 打包目标
+// 打包目标（可以在这里更改调试的包）
 const target = 'reactivity';
 
 async function build(target) {
