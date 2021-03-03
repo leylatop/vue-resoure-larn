@@ -59,6 +59,6 @@ export function createReactiveObject(target, isReadonly, baseHandlers) {
     // map的key值为要代理的对象，map的value值为代理结果
     proxyMap.set(target, proxy);
 
-    return proxy;
+    return proxy
 
 }
