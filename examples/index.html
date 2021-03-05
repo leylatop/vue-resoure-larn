@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="../node_modules/@vue/reactivity/dist/reactivity.global.js"></script>
+    <script>
+        // 是否是只读，是否是浅层代理
+        // reactive 不是只读 不是浅层代理
+        // readonly 是只读，不是浅层代理
+        // shallowReactive 不是只读，是浅层代理
+        // shallowReadonly 是只读，是浅层代理
+        // 表现形式如下：
+        // reactive 对象及对象的属性对象都是响应式的（被proxy代理） 
+        // readonly 对象是只读的（被proxy代理），无论第几层都不可以改
+        // shallowReactive 对象只有第一层被代理，第二层就不被proxy代理
+        // shallowReadonly 对象只有第一层被代理，且第一层不能改
+        let {reactive, readonly, shallowReactive, shallowReadonly} = VueReactivity;
+
+        let state = shallowReadonly({
+            name: 'qiao',
+            props: {
+                age: 26,
+                height: 166
+            }
+        })
+        state.props.age = 'xxxxxxxxxxxxxxxxxxxx'
+        state.name = 'lllllllllllllll'
+        console.log(state.props)
+        console.log(state)
+
+
+    </script>
+</body>
+</html>

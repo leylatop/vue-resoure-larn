@@ -1,16 +1,12 @@
 import { isObject } from '@vue/shared/src';
+import { 
+    mutableHandlers, 
+    readonlyHandlers, 
+    shallowReactiveHandlers, 
+    shallowReadonlyHandlers 
+} from './baseHandlers';
+
 // 响应式api
-// reactive拦截
-const mutableHandlers = {}
-
-// shallowReactive拦截
-const shallowReactiveHandlers = {}
-
-// readonly拦截器
-const readonlyHandlers = {}
-
-// shallowReadonly拦截器
-const shallowReadonlyHandlers = {}
 export function reactive(target) {
     return createReactiveObject(target, false, mutableHandlers);
 }
