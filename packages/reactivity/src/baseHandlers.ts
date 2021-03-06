@@ -1,4 +1,5 @@
 import { extend, isObject } from "@vue/shared/src";
+import { track } from "./effect";
 import { reactive, readonly } from "./reactive";
 
 // reactive拦截  实现new Proxy的get和set
@@ -67,7 +68,10 @@ function createGetter(isReadonly = false, shallow = false) {
 
         // 如果不是只读的，就要收集依赖，等数据变化时更新对应的视图
         if (!isReadonly) {
-            // 
+            // effect对应的fn函数会默认执行一次
+            // 在effect执行时候，使用到reactive响应式数据，需要获取响应式数据的属性值，会调用get方法
+            // 此时将依赖收集起来
+            track();
         }
 
         // 如果是浅层代理，则直接返回属性对应的值就可以（因为属性对应的值没有被代理，还是普通的对象或者基本数据类型值）

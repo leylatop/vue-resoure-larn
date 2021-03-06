@@ -25,11 +25,11 @@
 
         // 默认执行时候，会调用reactive的get方法，我们可以将对应的effect函数存起来
         effect(()=> {
-            console.log('====')
             app.innerHTML = '我是' + state.name + ', 我今年' + state.age + '岁了'
         })
 
         setTimeout(() => {
+            // 修改数据后，要重新执行effect内的fn，这就是响应式的effect
             state.age +=1;
         }, 1000)
     </script>
