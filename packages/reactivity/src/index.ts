@@ -4,3 +4,7 @@ export {
     shallowReadonly,
     shallowReactive
 } from './reactive'
+
+export {
+    effect
+} from './effect';

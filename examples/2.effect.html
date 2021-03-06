@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="app"></div>
+    <script src="../node_modules/@vue/reactivity/dist/reactivity.global.js"></script>
+    <script>
+        const { effect, reactive } = VueReactivity;
+        let state = reactive({
+            name: 'qiao',
+            age: 100,
+            other: 'xxx',
+        })
+
+        // 副作用函数，默认会执行一次
+        // 每修改一次effect内部使用到的属性（相关联的属性），又会执行一次
+        // 
+        // 修改不相关的响应式数据，不会触发effect
+        // 相当于vue2的watch
+
+        // 默认执行时候，会调用reactive的get方法，我们可以将对应的effect函数存起来
+        effect(()=> {
+            console.log('====')
+            app.innerHTML = '我是' + state.name + ', 我今年' + state.age + '岁了'
+        })
+
+        setTimeout(() => {
+            state.age +=1;
+        }, 1000)
+    </script>
+</body>
+</html>
