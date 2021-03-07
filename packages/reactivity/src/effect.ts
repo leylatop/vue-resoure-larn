@@ -63,9 +63,45 @@ function createReactiveEffect(fn, options) {
 
 
 // 让某个对象中的属性，收集它当前对应的effect
-// 只有取值才可以走这里 
-
+const targetMap = new WeakMap();
+// map的key是对象
+// map的值是 一个map
+// 只有在effect取值的属性才走这里，收集依赖的函数
 export function track(target, type, key) {
     // 可以拿到当前的effect
-    activeEffect
+    // 如果当前activeEffect为空，则表示不用收集
+    if (activeEffect === undefined) {
+        return;
+    }
+
+    // 例如：
+    // target = { name: 'qiao', age: 22 };
+    // key 对应的是name，age
+    // depsMap = {  //map数组
+    //     ({ name: 'qiao', age: 22 }) => { 
+    //         name => [effect1, effect2],//这里是一个set数组
+    //         age => [effect1, effect2]
+    //     }
+    // }
+    // 查找map中有没有target对应的map值
+    let depsMap = targetMap.get(target);
+    // 如果没有的话，将target存储到map中，key值是target对象，value值是空的map对象
+    if (!depsMap) {
+        targetMap.set(target, (depsMap = new Map()));
+    }
+
+    // 查找有没有该key值对应的map值（map值为set数组）
+    let dep = depsMap.get(key);
+    // 如果不存在，则存储一个set数组（set可以在反复调用的时候，防止反复收集）
+    if (!dep) {
+        depsMap.set(key, (dep = new Set()));
+    }
+
+    // 如果set数组中不存在activeEffect，则往set里面存储activeEffect
+    // 完成收集
+    if (!dep.has(activeEffect)) {
+        dep.add(activeEffect)
+    }
+
+    console.log(targetMap);
 }

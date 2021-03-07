@@ -34,7 +34,7 @@ const reactiveMap = new WeakMap();
 const readonlyMap = new WeakMap();  
 export function createReactiveObject(target, isReadonly, baseHandlers) {
     // 1. 如果不是对象，则直接返回
-    if (isObject(target)) {
+    if (!isObject(target)) {
         return target
     }
 
