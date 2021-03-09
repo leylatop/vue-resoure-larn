@@ -1,6 +1,6 @@
-import { extend, isObject } from "@vue/shared/src";
-import { track } from "./effect";
-import { TrackOperatorsTypes } from "./operators";
+import { extend, hasChanged, hasOwn, isArray, isIntegerKey, isObject } from "@vue/shared/src";
+import { track, trigger } from "./effect";
+import { TrackOperatorsTypes, TriggerOperatorsTypes } from "./operators";
 import { reactive, readonly } from "./reactive";
 
 // reactive拦截  实现new Proxy的get和set
@@ -98,10 +98,28 @@ function createGetter(isReadonly = false, shallow = false) {
 function createSetter(shallow = false) {
     return function set(target, key, value, receiver) {
 
+        // vue2无法监控更改索引，无法监控数组的长度变化->hack的方法 需要特殊处理
+        // 1. 区分是新增的还是修改的（set、add）
+        // 2. 区分是数组还是对象
+        // 如果是数组，且key是整形（index），就判定target为数组
+        // 判断set的key是新增的还是已有的
+        const hadKey = isArray(target) && isIntegerKey(key) ? Number(key) < target.length : hasOwn(target,key)
+        const oldValue = target[key];   //获取老值
+        
         // 等价于 target[key] = value
         // receiver代理对象，谁调用，就是谁
         const result = Reflect.set(target, key, value, receiver);
+        
+        if (!hadKey) {
+            // 新增
+            trigger(target, TriggerOperatorsTypes.ADD, key, value)
 
+        } else if (hasChanged(oldValue, value)) {
+            // 修改
+            trigger(target, TriggerOperatorsTypes.SET, key, value, oldValue);
+        }
+
+        // 当数据更新时，通知对应属性的effect重新执行
         return result;
 
     }

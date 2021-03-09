@@ -1,3 +1,6 @@
+import { isArray, isIntegerKey } from "@vue/shared/src";
+import { TriggerOperatorsTypes } from "./operators";
+
 // 第一个参数是回调函数
 // 第二个参数是可选项
 // effect相当于vue2的watcher
@@ -102,6 +105,62 @@ export function track(target, type, key) {
     if (!dep.has(activeEffect)) {
         dep.add(activeEffect)
     }
+}
 
-    console.log(targetMap);
+// 找到属性对应的effect函数，执行
+export function trigger(target, type, key?, newValue?, oldValue?) {
+    // 如果这个属性没有被收集过effect，则不需要做任何操作
+    // map的key是target
+    const depsMap = targetMap.get(target);
+    if (!depsMap) {
+        return
+    }
+
+    // 将所有要执行的effect 全部存到一个新的集合中，最终一起执行
+    // 使用set保存对相同的effect进行去重，比如修改一个数组的length属性，可能会有多个相同的effect，避免重复调用（修改一个属性的时候避免重复更新，不包括多次修改一个属性的时候（节流））
+    const effects = new Set();
+    // 收集要执行的effect
+    const add = (effectsToAdd) => {
+        // 也有可能是多个
+        if (effectsToAdd) {
+            effectsToAdd.forEach(effect => {
+                effects.add(effect)
+            });
+        }
+    }
+
+    // 特殊情况：1. 判断修改的是不是数组的长度；修改数组的长度影响较大；
+    // - 判断target是不是数组（不排除对象里含有length属性的情况）
+    if (key === 'length' && isArray(target)) {
+        // 1. 如果对应的长度有依赖收集需要更新（即：effect中使用了数组的长度这个值）
+        depsMap.forEach((dep, depKey) => {
+            // - 如果effect中使用到了数组的length属性
+            // - 或者effect中使用的数组下标，大于数组被重新设置的长度
+            // - 如果更改的长度小于收集的索引，那么这个索引也需要触发effect重新执行
+            if (depKey === 'length' || depKey > newValue) {
+                console.log(dep, depKey)
+                // 收集dep，dep为要执行的effect函数
+                add(dep);
+            }
+        });
+
+    } else {
+        // 如果是对象，或修改数组的索引（索引小于数组长度时），直接触发key对应的effect
+        if (key !== undefined) {    // key值存在，修改对象的值
+            // 把之前key对应的effect放到effects去执行
+            add(depsMap.get(key))
+        }
+
+        switch (type) {
+            case TriggerOperatorsTypes.ADD:
+                // 如果是数组，并且key是数组的索引，则把length对应的effect重新执行；修改了索引的值（索引大于数组长度时），触发length的对应的effect
+                if (isArray(target) && isIntegerKey(key)) {
+                    add(depsMap.get('length'))
+                }
+        }
+
+    }
+
+    // 执行更新
+    effects.forEach((effect: any) => { effect(); })
 }
