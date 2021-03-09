@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="app"></div>
+    <script src="../node_modules/@vue/reactivity/dist/reactivity.global.js"></script>
+    <script>
+        const {toRefs, reactive, effect} = VueReactivity;
+        let state = reactive({
+            name: 'qiao',
+            age: 20,
+            height: 166
+        });
+
+        // toRefs的参数必须是一个reactive代理过的对象，返回值是一个新对象，对象的两个属性分别是proxy中的两个属性，对象的属性值分别是经过toRef代理后返回的构造函数ObjectRefImpl的实例，实例拥有响应式，所以后续直接修改属性值即可
+        // 不能直接解构state，但是多加一个value就可以了
+        // 不破坏原有的响应式结构
+        let {name, age} = toRefs(state);
+        effect(()=> {
+            app.innerHTML = name.value + age.value + state.height;     // 如果取值是value的话可以省略
+        })
+        setTimeout(() => {
+            name.value = 'qxx'
+            state.height = 167
+        }, 1000)
+    </script>
+</body>
+</html>

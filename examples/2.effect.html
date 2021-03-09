@@ -11,6 +11,7 @@
 <body>
     <div id="app"></div>
     <script src="../node_modules/@vue/reactivity/dist/reactivity.global.js"></script>
+    
     <script>
         const { effect, reactive } = VueReactivity;
         let state = reactive({
@@ -38,6 +39,11 @@
             // state.arr.length = 1;
             state.arr[100] = 1;
         }, 1000)
+
+
+        // 1. effect中所有属性，都会收集effect（track）
+        // 2. 当这个属性发生变化时，会重新执行effect（trigger）
+
     </script>
 </body>
 

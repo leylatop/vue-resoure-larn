@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app"></div>
+    <script src="../node_modules/@vue/reactivity/dist/reactivity.global.js"></script>
+    <script>
+        const { ref, reactive, effect } = VueReactivity;
+        // 将普通的数据类型的值，转化成一个对象，对象有一个属性叫value，值为ref的参数
+        // name是一个对象，含有一个value属性
+
+        // ref的参数也可以是对象，但是取值的时候是obj.value.key，对象被绑定在新对象的value属性上
+        // 大多数情况我们使用ref为普通数据类型做响应式
+        // name返回的是一个构造函数RefImpl的实例
+        let name = ref('qiao');
+
+        let state = ref({
+            props: {
+                age: 10
+            }
+        });
+        console.log(state.value.props)
+
+        console.log(name)
+        effect(() => {
+            // 默认执行收集依赖（track）
+            app.innerHTML = name.value;
+        })
+
+        setTimeout(() => {
+            // 更改值，重新执行effect（trigger）
+            name.value = 'qxx'
+        }, 1000)
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="app"></div>
+    <script src="../node_modules/@vue/reactivity/dist/reactivity.global.js"></script>
+    <script>
+        const {toRef, reactive, effect} = VueReactivity;
+
+        let state = reactive({
+            name: 'qiao',
+            age: 20
+        });
+
+        // toRef 可以把一个对象中的属性变成ref
+        // toRef的参数 第一个参数必须是reactive过的响应式对象，第二个参数为响应式对象中的key值
+        // 
+        let name = toRef(state, 'name');
+        // 返回构造函数ObjectRefImpl 的实例
+        console.log(name)
+
+        // 这样的写法，解构出来之后，就变成了字符串
+        // let {age} = state
+
+        effect(()=> {
+            app.innerHTML = name.value;     // 如果取值是value的话可以省略
+        })
+        setTimeout(() => {
+            // 等价于修改了state.name
+            name.value = 'qxx'
+        }, 1000)
+    </script>
+</body>
+</html>
