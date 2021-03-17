@@ -75,6 +75,8 @@ export function createReactiveObject(target, isReadonly, baseHandlers) {
     // const targetType = getTargetType(target)
     // getTargetType会判断两种特殊情况：1. target是否有skip属性； 2. target是否是一个不可扩展对象，如果是，则返回INVALID
 
+    // 若对象不可扩展，则直接返回
+
     // 2. 代理target
     // COLLECTION使用COLLECTION的handler ，COMMON使用COMMON的handler
     const proxy = new Proxy(target, baseHandlers);
