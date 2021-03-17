@@ -21,3 +21,11 @@ export const hasOwn = (target, key) => hasOwnProperty.call(target, key)
 
 // 判断两个值是否一致
 export const hasChanged = (oldValue, value) => oldValue !== value; 
+
+export const objectToString = Object.prototype.toString;
+
+// 获取数据类型 
+export const toTypeString = (value) => objectToString.call(value);
+
+// 获取value数据类型
+export const toRawType = (value) => toTypeString(value).slice(8, -1);
