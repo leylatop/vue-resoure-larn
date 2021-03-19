@@ -146,6 +146,8 @@ function createSetter(shallow = false) {
         // receiver代理对象，谁调用，就是谁
         const result = Reflect.set(target, key, value, receiver);
         
+        // 如果对象的原型也是proxy的话，则只触发一次set
+        // 场景：定义了a对象和b对象，将a对象设置代理，将b对象的__proto__属性设置到a的代理上，给b对象都设置代理，调用set方法时，会触发原型链的set
         if (!hadKey) {
             // 新增
             trigger(target, TriggerOperatorsTypes.ADD, key, value)

@@ -23,14 +23,28 @@ let uid = 0;
 let activeEffect = null;
 // effect 执行栈
 let effectStack = [];
+function cleanup(effect) {
+    const {deps}  = effect;
+    if(deps.length) {
+        for(let i = 0; i<deps.length; i++) {
+            deps[i].delete(effect);
+        }
+        deps.length = 0; //找到effect的deps属性循环，并且删除掉，重写收集
+    }
+    
+}
 
 // 返回一个函数
 function createReactiveEffect(fn, options) {
     const effect = function reactiveEffect() {
         // 将effect加入栈中之前，先判断栈中是否已经包含该effect，避免反复更新属性值，反复调用effect，造成死循环
         if (!effectStack.includes(effect)) {
+            // 如果栈中已经已经有了当前的effect，就需要重写收集依赖，每次重写执行effect都会取值，调用get方法，重新进行依赖收集
+            cleanup(effect);
             // 函数可能会发生异常，所以使用try
             try {
+                // 暂停收集
+                // enableTracking()
                 // 正在执行的函数当前对应到effect
                 activeEffect = effect;
                 // 若effect回调函数中嵌套了effect，会导致内部effect执行完毕后，再调用属性值到时候，activeEffect还是内部的effct，所以我们使用一个栈来操作
@@ -39,8 +53,12 @@ function createReactiveEffect(fn, options) {
                 // 默认执行时，会执行fn；执行函数时，获取属性值，会调用响应式的get的方法
                 return fn();
             } finally { //执行完毕，使用 finally
+                
                 // 函数执行完毕之后，将effect从栈中弹出，并且标识当前活动effect为栈中最后一个effect
                 effectStack.pop();
+
+                // 恢复收集
+                // resetTracking()
                 activeEffect = effectStack[effectStack.length - 1];
             }
         }
@@ -48,9 +66,13 @@ function createReactiveEffect(fn, options) {
 
     // 三大特点:  id _isEffect row
     effect.id = uid++;  // 制作一个标识，用于区分不同的effect，源码中用uid做排序，使用uid做标识，用于在组件更新的时候查找对应的effect
-    effect._isEffect = true;    // 用于标识这是一个响应式effect（effect函数 私有变量）
-    effect.row = fn;    // 用于保存effect对应的原来的函数，根据fn创建的effct，创建二者映射关系
+    effect._isEffect = true;    // 用于标识这是一个响应式effect（effect函数 私有变量），判断参数是否为函数已经被effect后的返回值
+    effect.row = fn;    // 用于保存effect对应的原来的函数，根据fn创建的effct，创建二者映射关系，如果一个函数被过后的值，再次被effect，则fn为第一次的方法，但是前后两个fn是不一样的
     effect.options = options;   // 在effect上保存用户的属性
+    effect.allowRecurse = !!options.allowRecurse;   // 是否允许effect重复执行
+    effect.active = true;   // effect是否是激活状态
+    effect.deps = []    //effect对应的属性
+    effect.options = options;
 
     return effect;
 }
@@ -103,7 +125,8 @@ export function track(target, type, key) {
     // 如果set数组中不存在activeEffect，则往set里面存储activeEffect
     // 完成收集
     if (!dep.has(activeEffect)) {
-        dep.add(activeEffect)
+        dep.add(activeEffect)   // 将属性和effect关联起来，通过属性可以找到effect 也可以通过effect找到属性
+        activeEffect.deps.push(dep)
     }
 }
 
@@ -160,7 +183,18 @@ export function trigger(target, type, key?, newValue?, oldValue?) {
         }
 
     }
+    function run() {
+        // 如果effect的第二个参数有onTrigger选项，且选项是个函数，则执行onTrigger
 
-    // 执行更新
+        // 如果effect的第二个参数里面有sheduler选项，且选项是个函数，参数为effect， 则执行sheduler（走自己定义的更新逻辑）
+
+        // 否则，执行effect
+        // effect()
+
+    }
+    // 执行更新（源码这里执行的是run方法， 我们简写了）
     effects.forEach((effect: any) => { effect(); })
 }
+
+// watchApi和组件都是基于effect
+// reactive对应 observe effect对应watch
