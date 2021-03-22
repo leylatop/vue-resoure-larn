@@ -1,19 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
     <div id="app"></div>
     <script src="../node_modules/@vue/reactivity/dist/reactivity.global.js"></script>
     <script>
-        const {toRefs, reactive, effect, computed} = VueReactivity;
+        const { toRefs, reactive, effect, computed, ref } = VueReactivity;
         const age = ref(10)
 
+        // myAge本质上是构造函数ComputedRefImpl的实例对象
+
+        // myAge = {
+        //     effect: function reactiveEffect() {},
+        //     setter: () => {},
+        //     _dirty: true,
+        //     value: 20
+        // }
+        const myAge = computed(() => {  // 此方法默认不执行
+            return age.value + 10
+        })
+
+
+        // const myAge = computed({
+        //     get() {},
+        //     set() {}
+        // }) 
+
+        // 当访问属性的时候执行，调用实例的getter方法，也就是computed的入参中的方法
+        // console.log(myAge.value)
+        // 再去访问属性的时候，如果值不发生改变，则不重新执行getter方法（涉及到缓存问题）
+        // console.log(myAge.value)
+        // 更新age的时候，方法默认不会重新计算（effect， lazy， scheduler + 缓存的标识）
+        // age.value = 500;
+
+        // 当再次访问属性的时候，方法重新执行，计算最新值
+        // myAge.value;
+
+
+
+        // 此effect没有使用age
+        effect(() => {
+            console.log(myAge.value)
+        })
+        // 当更新age的时候，如果myAge被effect收集依赖了，则需要重新执行effect的回调方法
+        age.value = 500;
     </script>
-    
+
 </body>
+
 </html>

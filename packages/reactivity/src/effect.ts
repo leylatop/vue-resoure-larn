@@ -187,13 +187,19 @@ export function trigger(target, type, key?, newValue?, oldValue?) {
         // 如果effect的第二个参数有onTrigger选项，且选项是个函数，则执行onTrigger
 
         // 如果effect的第二个参数里面有sheduler选项，且选项是个函数，参数为effect， 则执行sheduler（走自己定义的更新逻辑）
-
         // 否则，执行effect
         // effect()
 
     }
     // 执行更新（源码这里执行的是run方法， 我们简写了）
-    effects.forEach((effect: any) => { effect(); })
+    effects.forEach((effect: any) => {
+        if(effect.options.scheduler) {
+            // 执行scheduler时候，把effect作为参数传进去，effect是个函数
+            effect.options.scheduler(effect)
+        } else {
+            effect();
+        }
+    })
 }
 
 // watchApi和组件都是基于effect
