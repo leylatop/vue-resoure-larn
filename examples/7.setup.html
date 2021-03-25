@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="app">
+        
+    </div>
+    <script src="../node_modules/@vue/runtime-dom/dist/runtime-dom.global.js"></script>
+    <script>
+
+        let {createApp, h, reactive, onMounted} = VueRuntimeDOM;
+
+        let App = {
+            data() {    // 老的写法
+                return {
+                    a:1
+                }
+            },
+
+            // 原来render的参数是h方法，现在是proxy代理对象
+            // proxy对象可以代理App上的数据，等同于this：比如获取data中定义的数据
+            // optionsApi->compostionApi（可以自定义一些响应式数据），可以进行组合
+            render(a) {  // 这里的render和vue2的是一样的
+                console.log(a === this)
+                // h方法
+                // 在vue2中，第二个参数需要设置对象，在vue3中把第二个参数拍平了
+                return h('div', {style: {color: 'red'}}, 'helloworld')
+            }
+        }
+
+        
+        
+        // setup返回值
+        // - 返回对象：返回的对象会和data的数据合并
+        // - 返回函数：作为渲染函数
+
+        // setup参数
+        // setup的第一个参数props是createApp的第二个参数
+        // setup的第二个context上下文的值
+        // {
+        //     attrs: proxy,
+        //     emit: (event, ...args)=> {},
+        //     expose: (exposed)=> {}
+        //     props: proxy,
+        //     slots: proxy
+        // }
+
+        // setup内部的this指向window
+        // setup内部可以定义function事件
+        // setup有两种用法：
+        // - 在setup外部定义render方法，setup自身return 响应式数据（与data中的数据合并），在render中通过proxy来获取响应式数据
+        // - 在setup内部定义render方法，在render中直接获取响应式数据，然后将render返回
+
+        // setup第一种用法
+        let App1 = {
+            // 只运行一次
+            setup(props) { // 所有响应式数据都写在这里：receative ref effect，可以替代掉beforeCreate created
+                const state = reactive({count:1});
+                return {
+                    state
+                }
+            },
+            render(proxy) {
+                return h('div', {style: {color: 'red'}}, `helloworld${proxy.state.count}`)
+            }
+        }
+
+        // setup第二种用法
+        let App2 = {
+            props: {
+                name:String,
+            },
+            // beforeCreate created依然可以用，但是在setup之后执行\
+            // 一起弃用的还有beforeDestory、destory
+            beforeCreate() {
+                console.log('beforeCreate')
+            },
+            created() {
+                console.log('created')
+            },
+            // 只运行一次
+            setup(props, context) { // 所有响应式数据都写在这里：receative ref effect，可以替代掉beforeCreate created 
+                const state = reactive({count:1});
+
+                const fn = () => {
+                    state.count++
+                };
+
+                // 生命周期在setup内部调用，的参数是回调函数
+                
+                onMounted(()=> {
+                    console.log('onMounted')
+                })
+                // setup内部的render方法不能使用proxy访问响应式数据
+                return function render() {  // render函数是一个effect函数，数据发生变化，render会重新执行
+                    return h('div', {style: {color: 'red'}, onClick: fn}, `helloworld${state.count}`)
+                }
+            }
+        }
+
+        // 参数1 以哪个组件作为入口
+        // 参数2 props:若createApp传了第二个参数，则第二个参数是setup的第一个参数rops，并且在APP内部需要声明
+        createApp(App2, {name:'qxx'}).mount('#app');
+
+        // template也会变成render
+    </script>
+</body>
+</html>
