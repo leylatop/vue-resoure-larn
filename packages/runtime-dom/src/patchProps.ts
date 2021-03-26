@@ -1,4 +1,4 @@
-import { patchEvent } from './modules/events';
+import { patchEvent } from './modules/event';
 import { patchStyle } from './modules/style';
 import { patchClass } from './modules/class';
 import { patchAttr } from './modules/attr';
@@ -14,7 +14,18 @@ export const patchProps = (el, key, preValue, nextValue) => {
             patchClass(el, nextValue);
             break;
         case 'style':
+            patchStyle(el, preValue, nextValue);
+            break;
         default:
+            // 根据key的值来判断是属性还是事件
+            // 属性没什么特征，但是事件必须是以on开头的，所以我们使用正则来判断key是不是一个event
+            if (/^on[A-Z]/.test(key)) {
+                // 添加、删除、修改
+                patchEvent(el, key, nextValue);
+            } else {
+                patchAttr(el, key, nextValue);
+            }
+
             break
     }
 }
