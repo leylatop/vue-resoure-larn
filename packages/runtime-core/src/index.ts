@@ -1,3 +1,3 @@
-export const a = {
-    test: 'a'
-}
+import {createRenderer} from './renderer'
+
+export {createRenderer} from './renderer'

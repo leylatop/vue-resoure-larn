@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app"></div>
+    <script src="../node_modules/@vue/runtime-dom/dist/runtime-dom.global.js"></script>
+    <script>
+        let { createApp } = VueRuntimeDOM;
+        console.log(VueRuntimeDOM);
+        const App = {
+            render() {
+
+            }
+        }
+        // 第一个参数必须是组件，组件中必须有render函数
+        // 返回一个应用。vue2使用的是new关键字，vue3使用的是createApp
+        let app = createApp(App, {name: 'qiao'});
+        app.mount('#app');
+    </script>
+</body>
+
+</html>

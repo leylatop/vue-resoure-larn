@@ -29,3 +29,6 @@ export const toTypeString = (value) => objectToString.call(value);
 
 // 获取value数据类型
 export const toRawType = (value) => toTypeString(value).slice(8, -1);
+
+// 判断类型
+export * from './shapeFlags';
