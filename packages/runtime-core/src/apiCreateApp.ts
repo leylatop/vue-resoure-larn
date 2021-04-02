@@ -2,7 +2,7 @@
 
 import { createVNode } from "./vnode";
 
-// 通过高阶函数传参的方式，将render传入进来
+// 通过高阶函数传参的方式，将render传入进来（高阶函数）
 export function createAppAPI(render) {
     return function createApp(rootComponent, rootProps) {   // 告诉core哪个属性，哪个组件创建应用
         const app = {
