@@ -10,7 +10,7 @@ export function ref(value) {    //value是一个基本数据类型的数据
     return createRef(value)
 }
 
-export function  shallowRef(value) {
+export function shallowRef(value) {
     return createRef(value)
 }
 
