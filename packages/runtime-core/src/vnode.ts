@@ -27,6 +27,7 @@ export function createVNode(type, props, children = null) {
         type,
         props,
         children,
+        component: null,  // 如果是组件，则这里存放的是组件对应的实例（实例中存放的是render和setup的参数）
         el:null,    // vnode对应的真实的元素，稍后会将虚拟节点和真实节点对应起来
         key: props && props.key, //做diff算法用
         shapeFlag   // 判断当前自己的类型和儿子的类型，
@@ -37,7 +38,10 @@ export function createVNode(type, props, children = null) {
     console.log(vnode)
     // {
     //     "_v_isVnode": true,
-    //     "type": {},
+    //     "type": {
+    //         render: function(){},
+    //         setup: function() {}
+    //     },
     //     "props": {
     //         "name": "qiao"
     //     },

@@ -15,8 +15,13 @@
         let { createApp } = VueRuntimeDOM;
         console.log(VueRuntimeDOM);
         const App = {
-            render() {
-
+            setup(props, context) {
+                console.log(props, context);
+                return
+            },
+            // render方法是一个effect函数，数据发生变化的时候会重新渲染
+            render(proxy) {
+                console.log('render');
             }
         }
         // 第一个参数必须是组件，组件中必须有render函数
