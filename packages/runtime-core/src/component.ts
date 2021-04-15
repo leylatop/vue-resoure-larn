@@ -1,6 +1,7 @@
 // 存放组件相关的方法
 
 import { ShapeFlags } from "@vue/shared/src";
+import { PublicInstanceProxyHandlers } from "./componentPublicInstance";
 
 // const vnode = {
 //     "_v_isVnode": true,
@@ -42,11 +43,24 @@ export function createComponentInstance(vnode) {
         setupState: {},     // setup方法的返回值
         render: null,       // render方法
         isMounted: false,   // 标识组件是否挂载
-
-
     }
     // 实例上下文,访问实例的时候可以用instance.ctx._
     // 实现向上代理的功能(代理模式)
+    // instance.ctx = {
+    //     _: {
+    //         // uid: uid++,      // 组件标识
+    //         vnode,
+    //         type: vnode.type,   // 组件类型
+    //         parent,             // 组件的爸爸
+    //         ctx: {},            // 实例上下文
+    //         props: {},          // 组件属性
+    //         attrs: {},          // 组件属性2
+    //         slots: {},          // 组件插槽
+    //         setupState: {},     // setup方法的返回值
+    //         render: null,       // render方法
+    //         isMounted: false,   // 标识组件是否挂载
+    //     }
+    // }
     instance.ctx = {
         _: instance
     }
@@ -87,20 +101,24 @@ export function setupComponent(instance) {
 
 // 调用实例的setup方法,并且将setup方法的返回值填充到实例的setupState属性上
 function setupStatefulComponent(instance) {
-    // 1. 代理,涉及到传递给render函数的参数
-
+    // 1. 代理,涉及到传递给render函数的参数（当访问实例上的属性时，可以直接被代理到proxy上）
+    // 这里代理的是ctx对象，可以添加额外的逻辑
+    instance.proxy = new Proxy(instance.ctx, PublicInstanceProxyHandlers as any);
     // 2. 拿到组件的setup方法
     let Component = instance.type;
     let { setup, render } = Component;
 
     // 3. 创建一个setup的上下文(和instance不是一个东西)
     let setupContext = createSetupContext(instance);
-    setup(instance.props, setupContext);
+    setup(instance.props, setupContext);    // instance中props attrs slots exmit expose 会被提取出来，因为在开发过程中会使用这些属性
     // ===============
-    render();
+
+    // proxy是为了访问时更容易一些
+    render(instance.proxy);
 
 }
 
+// 提取一些在开发过程中会用到的属性，放在上下文中
 function createSetupContext(instance) {
     return {
         attrs: instance.attrs,
@@ -109,3 +127,7 @@ function createSetupContext(instance) {
         expose: () => {},   // 暴露一些方法
     }
 }
+
+// instance表示组件的状态、各种各样的状态和组件的相关信息
+// context就4个参数，是为了开发时使用的
+// proxy主要是为了取值方便，不需要使用props state，data 获取值，只使用proxy就可以
