@@ -1,3 +1,4 @@
+import { isFunction, isObject } from '@vue/shared/src';
 // 存放组件相关的方法
 
 import { ShapeFlags } from "@vue/shared/src";
@@ -40,7 +41,7 @@ export function createComponentInstance(vnode) {
         props: {},          // 组件属性
         attrs: {},          // 组件属性2
         slots: {},          // 组件插槽
-        setupState: {},     // setup方法的返回值
+        setupState: {},     // setup方法的返回值（当返回的值是对象的时候）
         render: null,       // render方法
         isMounted: false,   // 标识组件是否挂载
     }
@@ -106,16 +107,55 @@ function setupStatefulComponent(instance) {
     instance.proxy = new Proxy(instance.ctx, PublicInstanceProxyHandlers as any);
     // 2. 拿到组件的setup方法
     let Component = instance.type;
-    let { setup, render } = Component;
+    let { setup } = Component;
 
-    // 3. 创建一个setup的上下文(和instance不是一个东西)
-    let setupContext = createSetupContext(instance);
-    setup(instance.props, setupContext);    // instance中props attrs slots exmit expose 会被提取出来，因为在开发过程中会使用这些属性
-    // ===============
+    
+    // 3.判断setup是否存在，若不存在，则直接执行render，若存在，则执行setup
+    if(setup) {
+        // 1. 创建一个setup的上下文(和instance不是一个东西)
+        let setupContext = createSetupContext(instance);
 
-    // proxy是为了访问时更容易一些
-    render(instance.proxy);
+        // 2. 调用setup，拿到返回值
+        const setupResult = setup(instance.props, setupContext);    // instance中props attrs slots exmit expose 会被提取出来，因为在开发过程中会使用这些属性
 
+        // 3. 判断setupResult的数据类型，若是function，则返回值就是render，若是对象，则是实例的setupState属性值，并且将值赋到实例对象属性上面
+        handleSetupResult(instance, setupResult);
+    } else {
+        // 1. 完成组件的启动
+        finishComponentSetup(instance);
+    }
+}
+
+function handleSetupResult(instance, setupResult) {
+    if(isFunction(setupResult)) {
+        // render函数
+        instance.render = setupResult;
+
+    } else if(isObject(setupResult)) {
+        // setupState对象
+        instance.setupState = setupResult
+    }
+
+    // 设置render属性
+    finishComponentSetup(instance);
+}
+
+function finishComponentSetup(instance) {
+    let Component = instance.type;
+    // 1. 若instance上不存在render，就去取instance.type上的render方法
+    // 2. 若instance.type上也不存在render，就去编译Component.template，将返回结果赋给render
+    if(!instance.render) {
+        // 若render不存在，则需要对template模板进行编译，产生render
+        // template
+        if(!Component.render && Component.template) {
+            // Component.render = compile(Component.template, {});
+        }
+        instance.render = Component.render
+    }
+
+    console.log(instance)
+    // 对vue2.0的api做了兼容处理
+    // merge applyOptions
 }
 
 // 提取一些在开发过程中会用到的属性，放在上下文中

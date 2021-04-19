@@ -11,6 +11,7 @@ export const PublicInstanceProxyHandlers = {
         if(key[0] == '$') {
             return
         }
+        // 取值时有优先级
         if(hasOwn(setupState, key)) {
             return setupState[key]
         } else if(hasOwn(props, key)) {

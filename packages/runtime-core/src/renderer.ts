@@ -9,8 +9,10 @@ import { createComponentInstance, setupComponent } from './component';
 // createRenderer 目的就是一个渲染器
 export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
     // 渲染的effect, 创建一个effect并执行render函数
+    // render方法中拿到的数据会收集这个effect，属性更新时， effect会重新执行
     const setupRenderEffect = () => {
 
+        // 区分是初始化渲染，还是更新渲染
     }
 
     // 1. 第一个参数初始的虚拟节点
@@ -25,8 +27,10 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         // 具体执行：
         // 1. 创建一个实例，将实例挂到虚拟节点的component属性上（只定义属性）
         const instance = (initialNode.component = createComponentInstance(initialNode));
+
         // 2. 将需要的数据解析到实例上（给实例的属性赋值）
-        setupComponent(instance);
+        setupComponent(instance);   // state props render attrs
+
         // 3. 创建一个effect, 调用render方法
         setupRenderEffect()
         // 创建实例=> 解析render和setup的参数=> 创建effect，让render执行
