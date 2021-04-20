@@ -2,10 +2,14 @@
 
 import { isArray, isObject, isString, ShapeFlags } from "@vue/shared/src"
 
+// 判断是否是虚拟节点
+export function isVNode(vnode) {
+    return vnode._v_isVnode;
+}
+
 // h('div', {style: {color: 'red'}}, 'children')
 // createVNode({render() {}}, {name: 'qiao'})
 // h方法和createVNode方法类似
-
 export function createVNode(type, props, children = null) {
     // 可以根据type来区分是组件还是普通的元素
 
@@ -35,7 +39,6 @@ export function createVNode(type, props, children = null) {
     
     // 描述自身和儿子的类型，可以针对不同的儿子类型做不同的处理
     normalizeChildren(vnode, children);
-    console.log(vnode)
     // {
     //     "_v_isVnode": true,
     //     "type": {

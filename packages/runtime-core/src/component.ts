@@ -153,7 +153,6 @@ function finishComponentSetup(instance) {
         instance.render = Component.render
     }
 
-    console.log(instance)
     // 对vue2.0的api做了兼容处理
     // merge applyOptions
 }

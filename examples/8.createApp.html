@@ -12,13 +12,11 @@
     <div id="app"></div>
     <script src="../node_modules/@vue/runtime-dom/dist/runtime-dom.global.js"></script>
     <script>
-        let { createApp } = VueRuntimeDOM;
-        console.log(VueRuntimeDOM);
+        let { createApp, h } = VueRuntimeDOM;
 
         // 如果setup返回值是一个函数，优先执行setup内部的render函数
         const App = {
             setup(props, context) {
-                console.log(props, context);
                 return {
                     a: 1, 
                     b: 2
@@ -26,7 +24,14 @@
             },
             // render方法是一个effect函数，数据发生变化的时候会重新渲染
             render(proxy) { // 把state和props都整合到了proxy上面
-                console.log('component render')
+                // h写法有几种
+                // h('div','helloworld')
+                // h('div',h('p'))
+                // h('div', {})
+                // h('div', {}, 'helloworld')
+                // h('div', {}, [h('p'), h('span')])
+                // h('div', {}, h('p'), h('span'))
+                return h('div', {style: {color: 'red'}}, 'helloworld')
             }
         }
         // 第一个参数必须是组件，组件中必须有render函数

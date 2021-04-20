@@ -39,22 +39,6 @@ export function createApp(rootComponent, rootProps = null) {
 
     }
     return app;
-    return {
-        // 用来挂载组件
-        mount: () => {
-
-        },
-        // 用来定义组件
-        // 第一个参数：组件名
-        // 第二个参数 options
-        component: () => {
-
-        },
-        directive: () => {
-
-        },
-        use: () => {
-
-        }
-    }
 }
+
+export * from '@vue/runtime-core'
