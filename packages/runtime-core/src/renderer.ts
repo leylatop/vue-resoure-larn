@@ -9,10 +9,22 @@ import { createComponentInstance, setupComponent } from './component';
 
 // createRenderer 目的就是一个渲染器
 export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
+    const {
+        insert: hostInsert,
+        remove: hostRemove,
+        patchProp: hostPatchProp,
+        createElement: hostCreateElement,
+        createText: hostCreateText,
+        createComment: hostCreateComment,
+        setText: hostSetText,
+        setElementText: hostSetElementText,
+    } = rendererOPtions;
+
+    // ----------------------------------组件处理----------------------------------------------------
+
     // 渲染的effect, 创建一个effect并执行render函数
     // render方法中拿到的数据会收集这个effect，属性更新时， effect会重新执行
     const setupRenderEffect = (instance, container) => {
-
         // 区分是初始化渲染，还是更新渲染
         instance.update = effect(function componentEffect() { //每个组件都有一个effect，vue3是组件级更新，数据更改，会重新执行组件的effect
             // 判断是否被挂载
@@ -89,6 +101,39 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             // updateComponet(n1, n2, container)
         }
     }
+    // ----------------------------------组件处理----------------------------------------------------
+
+
+
+    // ----------------------------------元素处理----------------------------------------------------
+    // 元素挂载
+    const mountElement = (vnode, container) => {
+        // 递归渲染
+        const {props, shapeFlag, type, children} = vnode;
+        let el = vnode.el = hostCreateElement(type);
+
+        if(props) {
+            for(const key in props) {
+                hostPatchProp(el, key, null, props[key])
+            }
+        }
+
+    }
+
+
+    const processElement = (n1, n2, container) => {
+        // 元素挂载
+        if(n1 == null) {
+            mountElement(n2, container);
+        } 
+        // 元素更新
+        else {
+
+        }
+    }
+    // ----------------------------------组件处理----------------------------------------------------
+
+
     // 1. 第一个参数之前的虚拟节点
     // 2. 第二个参数现在的虚拟节点
     // 3. 第三个参数渲染到哪个容器上
@@ -97,9 +142,7 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         const { shapeFlag } = n2;
         // 使用位运算的与操作判断数据类型
         if (shapeFlag & ShapeFlags.ELEMENT) {
-            console.log(n1, n2, container)
-            console.log('元素')
-            // processElement(n1, n2, container)
+            processElement(n1, n2, container)
         } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
             processComponent(n1, n2, container)
         }
