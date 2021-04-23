@@ -1,7 +1,7 @@
 export const nodeOps = {
     // 元素操作方法
     // 增加
-    cerateElement: tagName => document.createElement(tagName),
+    createElement: tagName => document.createElement(tagName),
 
     // 删除
     remove: child => {

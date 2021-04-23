@@ -74,5 +74,17 @@ function normalizeChildren(vnode, children) {
     }
 
     // 得出自己的类型和儿子的类型，既包括自己的类型，也包括儿子的类型，或运算结束后值是唯一的
-    vnode.ShapeFlags |= type;
+    vnode.shapeFlag |= type;
+}
+
+export const Text = Symbol('Text');
+// 将文本或者对象，转化成虚拟节点
+export function normalizeVNode(child) {
+    // 若是对象，则本身就是虚拟节点
+    if(isObject(child)) {
+        return child
+    }
+
+    // 可能是数字，所以一律转一下
+    return createVNode(Text, null, String(child))
 }

@@ -31,7 +31,7 @@
                 // h('div', {}, 'helloworld')
                 // h('div', {}, [h('p'), h('span')])
                 // h('div', {}, h('p'), h('span'))
-                return h('div', {style: {color: 'red'}}, 'helloworld')
+                return h('div', {style: {color: 'red'}, onClick:() => {alert(1)}}, 'helloworld', 'hahaha ')
             }
         }
         // 第一个参数必须是组件，组件中必须有render函数

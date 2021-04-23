@@ -8,7 +8,7 @@ import { patchAttr } from './modules/attr';
 
 // preValue 和 nextValue用于对比同一个element的前后的属性的值
 // key指的是属性的名称(class、style、attr、event)
-export const patchProps = (el, key, preValue, nextValue) => {
+export const patchProp = (el, key, preValue, nextValue) => {
     switch (key) {
         case 'class':
             patchClass(el, nextValue);

@@ -6,6 +6,7 @@ import { effect } from '@vue/reactivity/src';
 import { ShapeFlags } from '@vue/shared/src';
 import { createAppAPI } from "./apiCreateApp"
 import { createComponentInstance, setupComponent } from './component';
+import { normalizeVNode, Text } from './vnode';
 
 // createRenderer 目的就是一个渲染器
 export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
@@ -21,7 +22,7 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
     } = rendererOPtions;
 
     // ----------------------------------组件处理----------------------------------------------------
-
+    // 组件渲染
     // 渲染的effect, 创建一个effect并执行render函数
     // render方法中拿到的数据会收集这个effect，属性更新时， effect会重新执行
     const setupRenderEffect = (instance, container) => {
@@ -63,6 +64,7 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         })
     }
 
+    // 组件挂载
     // 1. 第一个参数初始的虚拟节点
     // 2. 第二个参数要挂载的容器
     const mountComponent = (initialNode, container) => {
@@ -87,6 +89,7 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
     }
 
 
+    // 组件处理
     // 1. 第一个参数之前的虚拟节点
     // 2. 第二个参数现在的虚拟节点
     // 3. 第三个参数渲染到哪个容器上
@@ -106,26 +109,52 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
 
 
     // ----------------------------------元素处理----------------------------------------------------
+    // 挂载元素的儿子（一般用作数组的儿子）
+    const mountChildren = (children, container) => {
+        for(let i = 0; i < children.length; i++) {
+            // 如果是两个连续的文本的话，不可以直接设置container的文本内容，那样的话会覆盖
+            // 需要将文本转成节点，然后把节点丢进去
+            // 此时还不知道child是文本类型还是对象类型
+            let child = normalizeVNode(children[i]);
+            // 把创建后的节点塞到容器中
+            patch(null, child, container)
+        }
+    }
+
     // 元素挂载
     const mountElement = (vnode, container) => {
         // 递归渲染
-        const {props, shapeFlag, type, children} = vnode;
+        const { props, shapeFlag, type, children } = vnode;
         let el = vnode.el = hostCreateElement(type);
 
-        if(props) {
-            for(const key in props) {
+        // 1. 将props（style、event、class、attr）绑定到真实dom上
+        if (props) {
+            for (const key in props) {
                 hostPatchProp(el, key, null, props[key])
             }
         }
 
+        // 2. 渲染子节点
+        // 如果儿子是文本，直接丢进去就可以 
+        if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+            console.log(el, children)
+            hostSetElementText(el, children)
+        }
+        // 如果儿子是数组，就依次挂载数组的儿子
+        else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+            mountChildren(children, el);
+        }
+        // 3.将真实dom插入到容器中
+        hostInsert(el, container)
     }
 
 
+    // 元素处理
     const processElement = (n1, n2, container) => {
         // 元素挂载
-        if(n1 == null) {
+        if (n1 == null) {
             mountElement(n2, container);
-        } 
+        }
         // 元素更新
         else {
 
@@ -134,18 +163,43 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
     // ----------------------------------组件处理----------------------------------------------------
 
 
+    // ----------------------------------文本处理----------------------------------------------------
+    const processText = (n1, n2, container) => {
+        if(n1 == null) {
+            // 将虚拟节点转化成一个dom元素
+            let child = n2.el = hostCreateText(n2.children)
+            console.log(n2)
+            // 将节点插入到container
+            hostInsert(child, container)
+        } else {
+            
+        }
+    }
+    // ----------------------------------文本处理----------------------------------------------------
+
+
     // 1. 第一个参数之前的虚拟节点
     // 2. 第二个参数现在的虚拟节点
     // 3. 第三个参数渲染到哪个容器上
     const patch = (n1, n2, container) => {
         // 针对不同类型的虚拟节点，做不同的初始化操作
-        const { shapeFlag } = n2;
-        // 使用位运算的与操作判断数据类型
-        if (shapeFlag & ShapeFlags.ELEMENT) {
-            processElement(n1, n2, container)
-        } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-            processComponent(n1, n2, container)
+        const { shapeFlag, type } = n2;
+        switch(type) {
+            // 如果是文本节点的话
+            case Text:
+                processText(n1, n2, container);
+                break
+            default:
+                // 使用位运算的与操作判断数据类型
+                if (shapeFlag & ShapeFlags.ELEMENT) {
+                    processElement(n1, n2, container)
+                } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+                    processComponent(n1, n2, container)
+                }
+
         }
+
+        
 
     }
     const render = (vnode, container) => {
