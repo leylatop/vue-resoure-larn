@@ -32,7 +32,6 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             // 判断是否被挂载
             // 1. 若没有被挂载过，则说明是第一次渲染
             if (!instance.isMounted) {
-
                 // 初次渲染结束后 instance.isMounted设置成true
                 instance.isMounted = true;
 
@@ -63,6 +62,12 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
                 // 2. 这里是更新渲染
                 // 更新使用effect的shceduler方法
                 console.log("更新了")
+
+                // 核心
+                // - diff算法
+                // - 序列优化
+                // - watchApi
+                // - 生命周期
             }
         }, {
             // scheduler自定义更新方法，降低更新频率
