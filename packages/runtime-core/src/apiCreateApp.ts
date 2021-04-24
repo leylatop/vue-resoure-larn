@@ -4,11 +4,14 @@ import { createVNode } from "./vnode";
 
 // 通过高阶函数传参的方式，将render传入进来（高阶函数）
 export function createAppAPI(render) {
+    // 将用户手写的组件和props传递进来，返回一个app对象
     return function createApp(rootComponent, rootProps) {   // 告诉core哪个属性，哪个组件创建应用
         const app = {
             _props: rootProps,
             _component: rootComponent,
             _container: null,
+
+            // App内部定义了mount方法
             mount(container) {      // 告诉core挂载的目的地
                 // 这一个方法中可以拿到所有参数
     

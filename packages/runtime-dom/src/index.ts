@@ -23,9 +23,13 @@ export const rendererOPtions = extend({ patchProp }, nodeOps);
 export function createApp(rootComponent, rootProps = null) {
     // 外层createApp，调用里层createApp，保证里面和外面的api是相同的
     // 做一个里外的拆分
+    // 创造一个渲染器，并且将操作dom的api放进去
     const app = createRenderer(rendererOPtions).createApp(rootComponent, rootProps);
     let {mount} = app;
     // 重写mount，重写的时候依然要调用mount
+
+    // 从这一步开始生成虚拟dom->挂载
+    // 这一步保证不去操作dom
     app.mount = function (container) {   //容器
         // 1. 清空容器的操作
         // 1). 拿到容器

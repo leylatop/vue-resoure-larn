@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app"></div>
+    <script src="../node_modules/@vue/runtime-dom/dist/runtime-dom.global.js"></script>
+    <script>
+        const {createApp, h, reactive} = VueRuntimeDOM;
+        let App = {
+            // props: {};
+            setup(props, context) {
+                const state = reactive({name: 'qiao'});
+                const fn = () => {
+                    state.name = 'xiaoxin'
+                }
+                return  ()=> {
+                    return h('div', {onClick: fn}, state.name)
+                }
+            }
+        }
+        
+        let app = createApp(App, {name: 'qiao', age: 20});
+        app.mount('#app');
+
+
+        // vue3的核心渲染流程
+        // 1. 将组件变成虚拟节点    createVNode
+        // 2. 将虚拟节点变成真实 dom processComponent processElement processText patch
+        // 3. 将真实dom插入到容器中 runtime-dom中定义的增删
+
+        // render方法的作用：可以渲染一个虚拟节点，将其挂载到具体的容器中
+        // vue3的核心：patch方法
+        // patch方法可以根据虚拟节点的类型调用不同的处理方法，进行挂载或者更新
+    </script>
+</body>
+
+</html>
