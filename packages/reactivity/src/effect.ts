@@ -30,8 +30,7 @@ function cleanup(effect) {
             deps[i].delete(effect);
         }
         deps.length = 0; //找到effect的deps属性循环，并且删除掉，重写收集
-    }
-    
+    } 
 }
 
 // 返回一个函数
@@ -40,7 +39,7 @@ function createReactiveEffect(fn, options) {
         // 将effect加入栈中之前，先判断栈中是否已经包含该effect，避免反复更新属性值，反复调用effect，造成死循环
         if (!effectStack.includes(effect)) {
             // 如果栈中已经已经有了当前的effect，就需要重写收集依赖，每次重写执行effect都会取值，调用get方法，重新进行依赖收集
-            cleanup(effect);
+            // cleanup(effect);
             // 函数可能会发生异常，所以使用try
             try {
                 // 暂停收集

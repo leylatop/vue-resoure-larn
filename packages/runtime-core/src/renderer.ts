@@ -6,6 +6,7 @@ import { effect } from '@vue/reactivity/src';
 import { ShapeFlags } from '@vue/shared/src';
 import { createAppAPI } from "./apiCreateApp"
 import { createComponentInstance, setupComponent } from './component';
+import { queueJob } from './scheduler';
 import { normalizeVNode, Text } from './vnode';
 
 // createRenderer 目的就是一个渲染器
@@ -60,7 +61,12 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
                 patch(null, subTree, container);
             } else {
                 // 2. 这里是更新渲染
+                // 更新使用effect的shceduler方法
+                console.log("更新了")
             }
+        }, {
+            // scheduler自定义更新方法，降低更新频率
+            scheduler: queueJob,
         })
     }
 
@@ -137,7 +143,6 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         // 2. 渲染子节点
         // 如果儿子是文本，直接丢进去就可以 
         if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
-            console.log(el, children)
             hostSetElementText(el, children)
         }
         // 如果儿子是数组，就依次挂载数组的儿子
@@ -168,7 +173,6 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         if(n1 == null) {
             // 将虚拟节点转化成一个dom元素
             let child = n2.el = hostCreateText(n2.children)
-            console.log(n2)
             // 将节点插入到container
             hostInsert(child, container)
         } else {

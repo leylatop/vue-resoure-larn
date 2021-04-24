@@ -12,18 +12,25 @@
     <div id="app"></div>
     <script src="../node_modules/@vue/runtime-dom/dist/runtime-dom.global.js"></script>
     <script>
-        let { createApp, h } = VueRuntimeDOM;
+        let { createApp, h, reactive } = VueRuntimeDOM;
 
         // 如果setup返回值是一个函数，优先执行setup内部的render函数
         const App = {
             setup(props, context) {
-                return {
-                    a: 1, 
-                    b: 2
+                let state = reactive({name: 'xiaoqiao'})
+                // 即使值没有发生变化，也会更新一次，是vue3的
+                let changeState = function() {
+                    state.name = 'qiaoxiaoxin'
+                    state.name = '123'
                 }
+                // 这里写了return就不会执行render里面的了
+                return function() {
+                    return h('div', {style: {color: 'red'}, onClick: changeState}, state.name)
+                };
             },
+
             // render方法是一个effect函数，数据发生变化的时候会重新渲染
-            render(proxy) { // 把state和props都整合到了proxy上面
+            // render(proxy) { // 把state和props都整合到了proxy上面
                 // h写法有几种
                 // h('div','helloworld')
                 // h('div',h('p'))
@@ -31,8 +38,8 @@
                 // h('div', {}, 'helloworld')
                 // h('div', {}, [h('p'), h('span')])
                 // h('div', {}, h('p'), h('span'))
-                return h('div', {style: {color: 'red'}, onClick:() => {alert(1)}}, 'helloworld', 'hahaha ')
-            }
+                // return h('div', {style: {color: 'red'}, onClick:() => {alert(1)}}, 'helloworld', 'hahaha ', h('span', 'nihao'))
+            // }
         }
         // 第一个参数必须是组件，组件中必须有render函数
         // 返回一个应用。vue2使用的是new关键字，vue3使用的是createApp

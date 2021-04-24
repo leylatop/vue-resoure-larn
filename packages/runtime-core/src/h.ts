@@ -5,7 +5,6 @@ import { createVNode, isVNode } from "./vnode";
 // h方法本质是createVNode
 // h方法是createVnode的兼容处理
 export function h(type, propsOrChildren, children) {
-    console.log(type, propsOrChildren, children)
     const l = arguments.length;
 
     // 类型+属性、类型 + 孩子
