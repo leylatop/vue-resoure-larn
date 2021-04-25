@@ -12,16 +12,16 @@
     <div id="app"></div>
     <script src="../node_modules/@vue/runtime-dom/dist/runtime-dom.global.js"></script>
     <script>
-        const {createApp, h, reactive} = VueRuntimeDOM;
+        const {createApp, h, reactive, ref} = VueRuntimeDOM;
         let App = {
             // props: {};
             setup(props, context) {
-                const state = reactive({name: 'qiao'});
-                const fn = () => {
-                    state.name = 'xiaoxin'
-                }
+                const state = ref(true);
+                setTimeout(() => {
+                    state.value = false
+                }, 3000)
                 return  ()=> {
-                    return h('div', {onClick: fn}, state.name)
+                    return state.value ? h('div', {style: {color: 'red'}}, 'qiao') : h('div', {style: {color: 'blue'}}, 'xiaoxin')
                 }
             }
         }
