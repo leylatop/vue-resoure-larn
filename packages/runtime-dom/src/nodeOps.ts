@@ -14,7 +14,7 @@ export const nodeOps = {
 
     // 插入
     insert: (child, parent, anchor = null) => {
-        // 如果参照物为空，则相当于appendChildl 
+        // 如果参照物为空，则相当于appendChild last
         parent.insertBefore(child, anchor);
 
     },
@@ -32,5 +32,8 @@ export const nodeOps = {
 
     // 设置文本中的内容（设置文本的值，可以用nodeValue）
     setText: (node, text) => { node.nodeValue = text },
+
+    // 查找当前节点的下一个节点
+    nextSlibing:(node) => node.nextSibling,
 
 };

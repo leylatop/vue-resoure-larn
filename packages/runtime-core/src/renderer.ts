@@ -20,6 +20,7 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         createComment: hostCreateComment,
         setText: hostSetText,
         setElementText: hostSetElementText,
+        nextSlibing: hostNextSlibing
     } = rendererOPtions;
 
     // ----------------------------------组件处理----------------------------------------------------
@@ -61,7 +62,15 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             } else {
                 // 2. 这里是更新渲染
                 // 更新使用effect的shceduler方法
-                console.log("更新了")
+                console.log("更新了");
+
+                // 上一次的树
+                let preTree = instance.subTree;
+                let proxyToUse = instance.proxy;
+                let nextTree = instance.nextTree = instance.render.call(proxyToUse, proxyToUse)
+                console.log(preTree, nextTree)
+                // 上一次的树和这一次的树进行更新
+                patch(preTree, nextTree, container);
 
                 // 核心
                 // - diff算法
@@ -122,7 +131,7 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
     // ----------------------------------元素处理----------------------------------------------------
     // 挂载元素的儿子（一般用作数组的儿子）
     const mountChildren = (children, container) => {
-        for(let i = 0; i < children.length; i++) {
+        for (let i = 0; i < children.length; i++) {
             // 如果是两个连续的文本的话，不可以直接设置container的文本内容，那样的话会覆盖
             // 需要将文本转成节点，然后把节点丢进去
             // 此时还不知道child是文本类型还是对象类型
@@ -133,7 +142,7 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
     }
 
     // 元素挂载
-    const mountElement = (vnode, container) => {
+    const mountElement = (vnode, container, anchor = null) => {
         // 递归渲染
         const { props, shapeFlag, type, children } = vnode;
         let el = vnode.el = hostCreateElement(type);
@@ -154,20 +163,78 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
             mountChildren(children, el);
         }
-        // 3.将真实dom插入到容器中
-        hostInsert(el, container)
+        // 3.将真实dom插入到容器中（如果有参考节点，则插入到参考节点前面，如果没有，则插入到后面）
+        hostInsert(el, container, anchor)
     }
 
+    // 对属性进行对比
+    const patchProps = (oldProps, newProps, el) => {
+        // 对新老props进行对比，当style在页面中被抽成了一个变量的时候，新老属性值就是相同的
+        if (oldProps !== newProps) {
+            // 循环两次
+            // 循环新的props
+            for (let key in newProps) {
+                const prev = oldProps[key];
+                const next = newProps[key];
+
+                // 如果新老节点的属性值不一样，则更新属性
+                if (prev !== next) {
+                    // key是属性的值可能的值有class、style、attr、event等
+                    hostPatchProp(el, key, prev, next);
+                }
+            }
+
+            // 循环老的props
+            for (let key in oldProps) {
+                const prev = oldProps[key];
+                // 如果老的节点的props在新的节点里面不存在，则新节点更新后对应的key的值就是null
+                if (!(key in newProps)) {
+                    hostPatchProp(el, key, prev, null)
+                }
+            }
+
+        }
+    }
+
+    // 更新儿子节点
+    const patchChildren = (n1, n2, container) => {
+        const c1 = n1.children;
+        const c2 = n2.children;
+
+        // 老的有儿子，新的没有儿子
+        // 老的没有儿子，新的有儿子
+        // 新老都有儿子
+        // 新老儿子都是文本
+
+
+
+    }
+
+    // 对元素进行比较
+    const patchElement = (n1, n2, container) => {
+        // 走到这里的时候，就表示n1和n2是同一个节点
+        // 1. 复用节点
+        let el = n2.el = n1.el;
+
+        // 2. 更新属性
+        const oldProps = n1.props || {};
+        const newProps = n2.props || {};
+        patchProps(oldProps, newProps, n2.el);
+
+        // 3. 更新儿子
+        patchChildren(n1, n2, el);
+
+    };
 
     // 元素处理
-    const processElement = (n1, n2, container) => {
+    const processElement = (n1, n2, container, anchor) => {
         // 元素挂载
         if (n1 == null) {
-            mountElement(n2, container);
+            mountElement(n2, container, anchor);
         }
         // 元素更新
         else {
-
+            patchElement(n1, n2, container);
         }
     }
     // ----------------------------------组件处理----------------------------------------------------
@@ -175,25 +242,55 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
 
     // ----------------------------------文本处理----------------------------------------------------
     const processText = (n1, n2, container) => {
-        if(n1 == null) {
+        if (n1 == null) {
             // 将虚拟节点转化成一个dom元素
             let child = n2.el = hostCreateText(n2.children)
             // 将节点插入到container
             hostInsert(child, container)
         } else {
-            
+
         }
     }
     // ----------------------------------文本处理----------------------------------------------------
 
+    // 判断新旧虚拟节点是否是相同类型的节点
+    // 根据type和key进行判断
+    const isSameVNodeType = (n1, n2) => {
+        return (n1.type === n2.type) && (n1.key === n2.key)
+    }
+
+    // 卸载节点
+    const unmount = (n1) => {
+        // 如果是元素的话，卸载元素节点
+        if (n1.shapeFlag & ShapeFlags.ELEMENT) {
+            hostRemove(n1.el)
+        }
+
+        // 后续判断是否是组件，会走到组件的生命周期里面
+
+
+    }
 
     // 1. 第一个参数之前的虚拟节点
     // 2. 第二个参数现在的虚拟节点
     // 3. 第三个参数渲染到哪个容器上
-    const patch = (n1, n2, container) => {
+    // 4. 第四个参数是n1节点的参考节点
+    const patch = (n1, n2, container, anchor = null) => {
         // 针对不同类型的虚拟节点，做不同的初始化操作
         const { shapeFlag, type } = n2;
-        switch(type) {
+
+        // 如果n1存在，并且n1和n2不是相同类型的节点
+        // 如果连节点的类型都不一致的话，就直接移除原来的节点，添加新的节点进去
+        if (n1 && !isSameVNodeType(n1, n2)) {
+            // 把以前的节点删掉
+
+            // 获取n1的下一个兄弟节点，作为参照物，让n2插入进来
+            anchor = hostNextSlibing(n1.el);
+            unmount(n1);
+
+            n1 = null;  // 将n1节点置空，则下面流程会重新渲染n2
+        }
+        switch (type) {
             // 如果是文本节点的话
             case Text:
                 processText(n1, n2, container);
@@ -201,14 +298,14 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             default:
                 // 使用位运算的与操作判断数据类型
                 if (shapeFlag & ShapeFlags.ELEMENT) {
-                    processElement(n1, n2, container)
+                    processElement(n1, n2, container, anchor)
                 } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
                     processComponent(n1, n2, container)
                 }
 
         }
 
-        
+
 
     }
     const render = (vnode, container) => {
