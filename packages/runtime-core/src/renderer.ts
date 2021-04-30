@@ -196,6 +196,14 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         }
     }
 
+    // 移除儿子数组
+    const unmountChildren = (children) => {
+        // 儿子是个数组，所以需要依次进行遍历并移除
+        for (let i = 0; i < children.length; i++) {
+            unmount(children[i])
+        }
+    }
+
     // 更新儿子节点
     const patchChildren = (n1, n2, container) => {
         const c1 = n1.children;
@@ -206,8 +214,32 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         // 新老都有儿子
         // 新老儿子都是文本
 
+        // n1儿子的节点类型
+        const preShapeFlag = n1.shapeFlag;
+        // n2儿子的节点类型
+        const shapeFlag = n2.shapeFlag;
 
+        // 如果新儿子是文本类型
+        if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+            // 如果老儿子是n个孩子，孩子可能是组件或者元素，但是新的是文本，则需要先移除老儿子
+            if (preShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                unmountChildren(c1);    // 如果c1包含组件会调用组件的销毁方法
+            }
 
+            // 新老儿子不一致
+            // 1. 如果老儿子是数组，则在上一步已经被移除
+            // 2. 如果老儿子是文本，则直接替换新文本进去就可以
+            if (c2 !== c1) {
+                hostSetElementText(container, c2)
+            }
+        } else {
+            // 如果新儿子是元素类型（但是上一次可能是文本或者数组）
+            // 旧：h('div', {style: {color: 'red'}}, 'qiao')
+            // 新：h('div', {style: {color: 'blue'}}, h('p', 'hello'))
+            if(preShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                // 当前是元素，之前是数组
+            }
+        }
     }
 
     // 对元素进行比较
@@ -267,6 +299,9 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         }
 
         // 后续判断是否是组件，会走到组件的生命周期里面
+        if(n1.shapeFlag & ShapeFlags.COMPONENT) {
+
+        }
 
 
     }
