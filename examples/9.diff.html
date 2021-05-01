@@ -22,8 +22,8 @@
                 }, 1000)
                 return  ()=> {
                     return state.value ? 
-                    h('div', {style: {color: 'red'}}, 'qiao') : 
-                    h('div', {style: {color: 'blue'}}, h('p', 'hello'))
+                    h('div', {style: {color: 'red'}}, [h('p', 'hello'), h('p', 'hello')]) : 
+                    h('div', {style: {color: 'blue'}}, 'aaa')
                 }
             }
         }

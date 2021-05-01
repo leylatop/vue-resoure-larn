@@ -62,7 +62,6 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             } else {
                 // 2. 这里是更新渲染
                 // 更新使用effect的shceduler方法
-                console.log("更新了");
 
                 // 上一次的树
                 let preTree = instance.subTree;
@@ -205,6 +204,9 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
     }
 
     // 更新儿子节点
+    // 更新文本内容：hostElementText=> oldText-newText oldText-newArray
+    // 卸载老儿子: unmountChildren=> oldArray-newText oldArray-newNull
+    // 挂载新儿子： mountChildren=> oldText-newArray 
     const patchChildren = (n1, n2, container) => {
         const c1 = n1.children;
         const c2 = n2.children;
@@ -227,17 +229,35 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             }
 
             // 新老儿子不一致
-            // 1. 如果老儿子是数组，则在上一步已经被移除
+            // 1. 如果老儿子是数组，则数组和文本一定不一样
             // 2. 如果老儿子是文本，则直接替换新文本进去就可以
             if (c2 !== c1) {
                 hostSetElementText(container, c2)
             }
-        } else {
+        } 
+        // 新儿子不是文本类型（要么是数组，要么是null）
+        else {
             // 如果新儿子是元素类型（但是上一次可能是文本或者数组）
-            // 旧：h('div', {style: {color: 'red'}}, 'qiao')
+            // 旧：h('div', {style: {color: 'red'}}, [h('p', 'hello'), h('p', 'hello')])
             // 新：h('div', {style: {color: 'blue'}}, h('p', 'hello'))
             if(preShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-                // 当前是元素，之前是数组
+                // 之前是数组，当前也是数组
+                if(shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                    // 核心diff算法
+                }
+                // 之前是数组，当前是null（特殊情况），直接删除老儿子
+                else {
+                    unmountChildren(c1)
+                }
+            } else {
+                // 当前是数组，之前是文本
+                // 就把老的清空，把新的挂上去
+                if(preShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+                    hostSetElementText(c1, '');
+                }
+                if(shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                    mountChildren(c2, container);
+                }
             }
         }
     }
