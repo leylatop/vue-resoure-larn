@@ -203,6 +203,72 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         }
     }
 
+    // 核心diff算法
+    const patchKeyedChildren = (c1, c2, container) => {
+        // ***************Vue3对特殊情况进行优化， 尽可能的减少比对区域***********************
+        let i = 0;                  // 默认从头部开始比较， i最终的值表示两个序列对比后，最前面不是同一个类型的位置
+        let e1 = c1.length - 1;     // 指针1：指向c1的最末端， e1最终的值表示两个序列对比之后，c1最末端与c2不是同一个类型的位置
+        let e2 = c2.length - 1;     // 指针2：指向c2的最末端， e2最终的值表示两个序列对比后，c2最末端与c1不是同一个类型的位置
+
+        // 1. 从头开始比，遇到不同的就停止对比 sync from start
+        while (i <= e1 && i <= e2) {
+            // 拿到c1和c2的开头
+            const n1 = c1[i];
+            const n2 = c2[i];
+            // 如果n1和n2是同一个类型，就去更新props和儿子，去走patch方法
+            if (isSameVNodeType(n1, n2)) {
+                patch(n1, n2, container)
+            } else {
+                break;
+            }
+            i++;
+        }
+        console.log(i, e1, e2);
+
+        // 2. 从尾开始比对， 遇到不同的就停止对比 sync from end
+        // （本次循环没有操作i，i值保持不变）
+        while (i <= e1 && i <= e2) {
+            // 拿到c1和c2的尾巴
+            const n1 = c1[e1];
+            const n2 = c2[e2];
+            if (isSameVNodeType(n1, n2)) {
+                patch(n1, n2, container)
+            } else {
+                break;
+            }
+            e1--;
+            e2--;
+        }
+
+
+        // 3. 同序列挂载，有一方已经比对完了 common sequence
+        // 如果第一个循环，将其中一个序列走完了，就相当于i=e1或者i=e2
+        // 问题： 如何确定是要挂载？挂载元素的个数？挂载的位置？
+        // 回答：
+        //      1. 循环结束后，若i比e1大，就说明老的少，有新增的
+        //      2. i和e2之间的就是需要新增挂载的元素
+        //      3. 
+
+        // 要新增
+        if (i > e1) {
+            // 新增的部分
+            if(i <= e2) {
+                // 循环i到e2，patch进行新增
+                while(i <=e2) {
+                    let anchor = '';
+                    patch(null, c2[i], container, );
+                    i++;
+                }
+            }
+        }
+
+
+        // 4. 同序列卸载，有一方已经比对完了
+        console.log(i, e1, e2);
+        // ***************Vue3对特殊情况进行优化， 尽可能的减少比对区域***********************
+
+    }
+
     // 更新儿子节点
     // 更新文本内容：hostElementText=> oldText-newText oldText-newArray
     // 卸载老儿子: unmountChildren=> oldArray-newText oldArray-newNull
@@ -234,16 +300,19 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             if (c2 !== c1) {
                 hostSetElementText(container, c2)
             }
-        } 
+        }
         // 新儿子不是文本类型（要么是数组，要么是null）
         else {
             // 如果新儿子是元素类型（但是上一次可能是文本或者数组）
             // 旧：h('div', {style: {color: 'red'}}, [h('p', 'hello'), h('p', 'hello')])
             // 新：h('div', {style: {color: 'blue'}}, h('p', 'hello'))
-            if(preShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+            if (preShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
                 // 之前是数组，当前也是数组
-                if(shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-                    // 核心diff算法
+                if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                    // ****************************************核心diff算法***********************************
+                    // 根据虚拟节点的key来进行diff比较
+                    patchKeyedChildren(c1, c2, container)
+                    // ****************************************核心diff算法***********************************
                 }
                 // 之前是数组，当前是null（特殊情况），直接删除老儿子
                 else {
@@ -252,10 +321,10 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             } else {
                 // 当前是数组，之前是文本
                 // 就把老的清空，把新的挂上去
-                if(preShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+                if (preShapeFlag & ShapeFlags.TEXT_CHILDREN) {
                     hostSetElementText(c1, '');
                 }
-                if(shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
                     mountChildren(c2, container);
                 }
             }
@@ -289,7 +358,7 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             patchElement(n1, n2, container);
         }
     }
-    // ----------------------------------组件处理----------------------------------------------------
+    // ----------------------------------元素处理----------------------------------------------------
 
 
     // ----------------------------------文本处理----------------------------------------------------
@@ -319,7 +388,7 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         }
 
         // 后续判断是否是组件，会走到组件的生命周期里面
-        if(n1.shapeFlag & ShapeFlags.COMPONENT) {
+        if (n1.shapeFlag & ShapeFlags.COMPONENT) {
 
         }
 

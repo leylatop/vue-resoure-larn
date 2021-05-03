@@ -22,8 +22,20 @@
                 }, 1000)
                 return  ()=> {
                     return state.value ? 
-                    h('div', {style: {color: 'red'}}, [h('p', 'hello'), h('p', 'hello')]) : 
-                    h('div', {style: {color: 'blue'}}, 'aaa')
+                    h('ul', {style: {color: 'red'}}, [
+                        h('li', {key: 'a'}, 'a'), 
+                        h('li', {key: 'b'}, 'b'), 
+                        h('li', {key: 'c'}, 'c'),
+                        h('li', {key: 'd'}, 'd'), 
+                    ]) : 
+                    h('ul', {style: {color: 'blue'}}, [
+                        h('li', {key: 'a'}, 'a'), 
+                        h('li', {key: 'b'}, 'b'),
+                        h('li', {key: 'f'}, 'f'),
+                        h('li', {key: 'm'}, 'm'),
+                        h('li', {key: 'c'}, 'c'),
+                        h('li', {key: 'd'}, 'd'), 
+                    ])
                 }
             }
         }
