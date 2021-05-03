@@ -241,30 +241,84 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         }
 
 
-        // 3. 同序列挂载，有一方已经比对完了 common sequence
-        // 如果第一个循环，将其中一个序列走完了，就相当于i=e1或者i=e2
-        // 问题： 如何确定是要挂载？挂载元素的个数？挂载的位置？
+        // 3. 同序列挂载，有一方已经比对完了 common sequence mount
+        // 问题： 如何确定是要新增挂载？挂载元素的个数？挂载的位置（向前插入or向后插入）？
         // 回答：
         //      1. 循环结束后，若i比e1大，就说明老的少，有新增的
         //      2. i和e2之间的就是需要新增挂载的元素
-        //      3. 
-
-        // 要新增
+        //      3. 判断是否存在e2的下一个元素，如果e2的下一个元素位置比c2的长度还大，则表示下一个位置是不存在的，则表示向后插入；如果存在，则插入到下一个元素之前
+        // 要新增（老的少新的多）
         if (i > e1) {
             // 新增的部分
-            if(i <= e2) {
+            if (i <= e2) {
+                // 拿到e2的下一个位置
+                const nextPos = e2 + 1;
+                // 如果下一个位置比c2长度小，则在下一个位置之前插入新的元素；
+                // 如果下一个位置比c2的长度大或者一样大，则在尾部添加新的元素
+                const anchor = nextPos < c2.length ? c2[nextPos].el : null;
+
                 // 循环i到e2，patch进行新增
-                while(i <=e2) {
-                    let anchor = '';
-                    patch(null, c2[i], container, );
+                while (i <= e2) {
+                    patch(null, c2[i], container, anchor);
                     i++;
                 }
             }
         }
 
+        // 4. 同序列卸载，有一方已经比对完了 common sequence unmount
+        // 问题： 如何确定是要卸载？卸载元素的个数？
+        // 回答：
+        //      1. 循环结束后，若i比e2大，就说明老的多，新的少，需要卸载        
+        //      2. i和e1之间的就是需要删除的元素
 
-        // 4. 同序列卸载，有一方已经比对完了
-        console.log(i, e1, e2);
+        // 要卸载或者一样多（老的多，新的少）
+        else if (i > e2) {
+            while (i <= e1) {
+                unmount(c1[i]);
+                i++;
+            }
+        }
+        // 5. 乱序比较，需要尽可能的复用
+        // 描述: 经过双端循环之后, 最终结果,i<e1 i<e2,不会走上面两个逻辑,i和e1 e2中间的就是乱序的部分,我们需要尽可能的复用
+        // 思路: 用新的元素做一个映射表,去老的里面找,一样的就复用,不一样的就要么插入,要么删除
+        else {
+            // 新增两个指针s1和s2 s1和s2的初始值相同,都是i
+            // s1: c1最左侧与c2不是同一个类型的元素的位置
+            // s2: c2最左侧与c1不是同一个类型的元素的位置
+            let s1 = i;
+            let s2 = i;
+            // s1-e1之间 c1与c2相比,c1最短不同的元素区间
+            // s2-e2之间 c2与c1相比,c2最短不同的元素区间
+
+            // vue3用新的做映射表
+            const keyToNewIndexMap = new Map();
+            for (let i = s2; i <= e2; i++) {
+                const childVnode = c2[i];    //childVnode是虚拟节点
+                // 使用vnode的key和index下标
+                keyToNewIndexMap.set(childVnode.key, i);
+            }
+
+            // 拿老的元素去映射表中,看是否存在
+            for (let i = s1; i <= e1; i++) {
+                const oldVnode = c1[i];
+                // 老的虚拟节点,对应的新的序列中的位置
+                let newIndex = keyToNewIndexMap.get(oldVnode.key);
+                // 如果老的虚拟节点在新的序列中没有找到对应的位置,就说明老的元素,不在新的序列里面,我们就去卸载它
+                if(newIndex == undefined) {
+                    unmount(oldVnode)
+                }
+                // 如果老节点在新序列中有对应的index,就把老的虚拟节点和新虚拟节点进行patch,更新属性和儿子
+                else {
+                    patch(oldVnode, c2[newIndex], container)
+                }
+            }
+
+            // 移动节点,并且将新增的节点插入
+            // 最长递增子序列
+        }
+
+
+
         // ***************Vue3对特殊情况进行优化， 尽可能的减少比对区域***********************
 
     }
