@@ -67,7 +67,6 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
                 let preTree = instance.subTree;
                 let proxyToUse = instance.proxy;
                 let nextTree = instance.nextTree = instance.render.call(proxyToUse, proxyToUse)
-                console.log(preTree, nextTree)
                 // 上一次的树和这一次的树进行更新
                 patch(preTree, nextTree, container);
 
@@ -223,7 +222,6 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             }
             i++;
         }
-        console.log(i, e1, e2);
 
         // 2. 从尾开始比对， 遇到不同的就停止对比 sync from end
         // （本次循环没有操作i，i值保持不变）
@@ -278,6 +276,7 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
                 i++;
             }
         }
+
         // 5. 乱序比较，需要尽可能的复用
         // 描述: 经过双端循环之后, 最终结果,i<e1 i<e2,不会走上面两个逻辑,i和e1 e2中间的就是乱序的部分,我们需要尽可能的复用
         // 思路: 用新的元素做一个映射表,去老的里面找,一样的就复用,不一样的就要么插入,要么删除
@@ -290,7 +289,7 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             // s1-e1之间 c1与c2相比,c1最短不同的元素区间
             // s2-e2之间 c2与c1相比,c2最短不同的元素区间
 
-            // vue3用新的做映射表
+            // vue3用新的做映射表, map的key值为虚拟节点的key,value为新的虚拟节点在列表中对应的下标
             const keyToNewIndexMap = new Map();
             for (let i = s2; i <= e2; i++) {
                 const childVnode = c2[i];    //childVnode是虚拟节点
@@ -298,21 +297,57 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
                 keyToNewIndexMap.set(childVnode.key, i);
             }
 
+            // c2中需要patch的个数
+            // 1. 获取s2到e2之间的虚拟节点的个数
+            // 2. 需要将这些虚拟节点进行标识，看是否被patch过
+            // 3. 若被patch过，则表示有可复用的元素；如果没有被patch过，则表示需要挂载新的元素
+            const toBePatched = e2 - s2 + 1;
+            // 使用新的索引和老的索引进行标记映射，
+            const newIndexToOldIndexMap = new Array(toBePatched).fill(0);
+            console.log(newIndexToOldIndexMap);
+
+
+
             // 拿老的元素去映射表中,看是否存在
             for (let i = s1; i <= e1; i++) {
                 const oldVnode = c1[i];
                 // 老的虚拟节点,对应的新的序列中的位置
                 let newIndex = keyToNewIndexMap.get(oldVnode.key);
                 // 如果老的虚拟节点在新的序列中没有找到对应的位置,就说明老的元素,不在新的序列里面,我们就去卸载它
-                if(newIndex == undefined) {
+                if (newIndex == undefined) {
                     unmount(oldVnode)
                 }
                 // 如果老节点在新序列中有对应的index,就把老的虚拟节点和新虚拟节点进行patch,更新属性和儿子
                 else {
+                    // 新的和旧的的索引关系，新儿子中的节点在老儿子中的位置
+                    // newIndex - s2 为老节点在新序列中对应的位置，在数组中对应的下标，需要把前面同序列过的去掉
+                    // i + 1 是老节点的位置，+1是为了避免下标为0的时候和默认值冲突；0表示节点没有被patch过
+                    newIndexToOldIndexMap[newIndex - s2] = i + 1;
                     patch(oldVnode, c2[newIndex], container)
                 }
             }
 
+            // 倒叙操作，是为了有个参照物，按照参照物不停的patch
+            // toBePatched - 1 是获取的数组的索引
+            for (let i = toBePatched - 1; i >= 0; i--) {
+                // 获取最后一个元素以及最后一个元素的下一个元素（寻找参照物）
+                // 如果有下一个元素，则是插入行为；如果下一个元素为空，则是patch行为
+                let currentIndex = i + s2;  // 找到最后一个元素的索引
+                let childVnode = c2[currentIndex];   // 找到最后一个元素对应的虚拟节点
+                let nextIndex = currentIndex + 1;   // 找到最后一个元素的下一个索引
+                // 判断下一个索引的位置是否大于c2的长度,如果大于,则向后追加元素;如果小于,则在下一个索引位置之前插入元素
+                // 查找参照物
+                let anchor = nextIndex < c2.length ? c2[nextIndex].el : null;
+                // 根据 newIndexToOldIndexMap 判断元素是否被patch过,如果是0说明是个新元素
+                if(newIndexToOldIndexMap[i] == 0) {
+                    patch(null, childVnode, container, anchor);
+                } else {
+                    // 将虚拟节点的真实节点插入 插入的过程具有移动性
+                    // 这种操作,需要将节点全部移动一遍,希望尽可能少的移动
+                    // 第一次插入最后一个元素后,虚拟节点会拥有真实节点
+                    hostInsert(childVnode.el, container, anchor);
+                }
+            }
             // 移动节点,并且将新增的节点插入
             // 最长递增子序列
         }
