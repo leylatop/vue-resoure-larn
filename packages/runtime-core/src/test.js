@@ -8,11 +8,16 @@ const arr = [2, 3, 1, 5, 6, 8, 7, 9, 4];
 // 先求个数
 // 动态规划
 
+// http://www.javascriptpeixun.cn/course/2993/task/184824/show
+
 function getSequence(arr) {
     // 1. 先拿到要求最长递增子序列的序列的总个数
     const len = arr.length;
     // 2. 最终的结果是最长递增子序列的索引，默认放入0，是拿当前序列索引为0的位置的值作为参照物进行后续比对
+    // 索引对应的arr中的值是一个递增的序列，所以我们使用二分查找性能更高，性能是log(n)
     const result = [0];
+
+    const p = arr.slice(0);//先把原数组拷贝一份，里面内容无所谓，主要是为了存储原数组对应的前一个位置的索引，所以需要长度一致一对一
 
     // 二分查找的start，end， middle
     let start, end;
@@ -27,9 +32,14 @@ function getSequence(arr) {
             // 6. 取到result最后一项的值，作为arr的索引，找到值索引对应的arr中的值；与当前值进行对比；若当前值更大，则直接将当前值的索引push到result中
             // *********************result中存储的是最长递增子序列的索引**************************
             if (arr[resultLastIndex] < arrI) {
+                // 如果当前的值比上一个值大，则直接将当前索引push到result，并且将p数组中当前值对应的位置，改成上一个值的索引，记录前一个值的索引
+                // 形成一一对应的关系，即当前值的上一个值的索引是谁
+                p[i] = resultLastIndex;
                 result.push(i);
                 continue;
             }
+
+            console.log(p);
 
 
             // 7. 二分查找，找已经排好的列表中比当前值大的那一项
@@ -60,11 +70,22 @@ function getSequence(arr) {
             // 开始和结尾相等， 说明找到了，结束二分查找
             // start/end就是找到的位置，此时start和end是相同的，此时需要将当前值的索引替换start/end索引对应的值
             if (arrI < arr[result[start]]) { //如果两个值相同，或者比当前值还小，就不进行替换了（以防外一）
+                // 替换逻辑 当前位置大于0才涉及到替换
+                if(start > 0) {
+                    // console.log(i, result[start]);
+                    // console.log(p[i]);
+                }
                 result[start] = i;
             }
         }
 
     }
+    // 最长递增子序列最终的长度
+    let len1 = result.length;
+    // 最长递增子序列长度的最后一个值（这个值是唯一确定的）
+    let last = arr[result[result.length - 1]];
+
+
     return result
 
 }
@@ -88,4 +109,9 @@ console.log(getSequence(arr));
 // 1, 2, 4, 7
 
 
+// 思考*************
+// 拿最新要比较的和倒数第一个进行比较，
+// 如果比倒数第一个大，则push到数组后面
+// 如果比倒数第一个小，且比倒数第二个大，就替换倒数第一个值
+// 如果相等，不需要替换
 
