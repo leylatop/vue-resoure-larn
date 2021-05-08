@@ -39,9 +39,6 @@ function getSequence(arr) {
                 continue;
             }
 
-            console.log(p);
-
-
             // 7. 二分查找，找已经排好的列表中比当前值大的那一项
             // 二分查找是，查找result的索引，找到对应的值，值的内容是arr的索引，然后根据arr的索引找到arr对应的值
             // ************** start end middle 是result的索引*************
@@ -71,9 +68,11 @@ function getSequence(arr) {
             // start/end就是找到的位置，此时start和end是相同的，此时需要将当前值的索引替换start/end索引对应的值
             if (arrI < arr[result[start]]) { //如果两个值相同，或者比当前值还小，就不进行替换了（以防外一）
                 // 替换逻辑 当前位置大于0才涉及到替换
+                // 记住它要替换的那个人的前一个位置的索引
+                // start是result的下标，start-1是前一个位置
+                // result[start - 1] 是前一个位置的索引
                 if(start > 0) {
-                    // console.log(i, result[start]);
-                    // console.log(p[i]);
+                    p[i] = result[start - 1];
                 }
                 result[start] = i;
             }
