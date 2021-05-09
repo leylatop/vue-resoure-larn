@@ -4,6 +4,7 @@
 
 import { effect } from '@vue/reactivity/src';
 import { ShapeFlags } from '@vue/shared/src';
+import { createLogicalAnd } from 'typescript';
 import { createAppAPI } from "./apiCreateApp"
 import { createComponentInstance, setupComponent } from './component';
 import { queueJob } from './scheduler';
@@ -304,8 +305,6 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             const toBePatched = e2 - s2 + 1;
             // 使用新的索引和老的索引进行标记映射，
             const newIndexToOldIndexMap = new Array(toBePatched).fill(0);
-            console.log(newIndexToOldIndexMap);
-
 
 
             // 拿老的元素去映射表中,看是否存在
@@ -326,6 +325,9 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
                     patch(oldVnode, c2[newIndex], container)
                 }
             }
+
+            console.log(newIndexToOldIndexMap);
+            
 
             // 倒叙操作，是为了有个参照物，按照参照物不停的patch
             // toBePatched - 1 是获取的数组的索引
@@ -350,6 +352,7 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             }
             // 移动节点,并且将新增的节点插入
             // 最长递增子序列
+            // 求出最长递增子序列之后，就知道哪些元素不需要移动，将不连续的进行移动或者插入
         }
 
 

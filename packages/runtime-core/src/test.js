@@ -1,6 +1,7 @@
 // const arr = [1, 8, 5, 3, 4, 9, 7, 6, 0];
-const arr = [2, 3, 1, 5, 6, 8, 7, 9, 4];
+// const arr = [2, 3, 1, 5, 6, 8, 7, 9, 4];
 // const arr = [1, 2, 3, 4, 5, 0];
+const arr = [5, 3, 4, 0]
 
 // 求当前列表中最大递增个数，看潜力
 // 1, 3, 4, 7
@@ -17,7 +18,7 @@ function getSequence(arr) {
     // 索引对应的arr中的值是一个递增的序列，所以我们使用二分查找性能更高，性能是log(n)
     const result = [0];
 
-    const p = arr.slice(0);//先把原数组拷贝一份，里面内容无所谓，主要是为了存储原数组对应的前一个位置的索引，所以需要长度一致一对一
+    const p = arr.slice(0).fill(-1);//先把原数组拷贝一份，里面内容无所谓，主要是为了存储原数组对应的前一个位置的索引，所以需要长度一致一对一
 
     // 二分查找的start，end， middle
     let start, end;
@@ -71,7 +72,7 @@ function getSequence(arr) {
                 // 记住它要替换的那个人的前一个位置的索引
                 // start是result的下标，start-1是前一个位置
                 // result[start - 1] 是前一个位置的索引
-                if(start > 0) {
+                if (start > 0) {
                     p[i] = result[start - 1];
                 }
                 result[start] = i;
@@ -79,14 +80,23 @@ function getSequence(arr) {
         }
 
     }
-    // 最长递增子序列最终的长度
+
+
+    // 最长递增子序列最终长度
     let len1 = result.length;
-    // 最长递增子序列长度的最后一个值（这个值是唯一确定的）
-    let last = arr[result[result.length - 1]];
-
-
+    // 最长递增子序列长度的最后一个值的在arr中的索引（这个值是唯一确定的）
+    // last的初始值是9对应的arr的下标
+    let last = result[len1 - 1];
+    // 根据前驱节点，从后向前查找，进行追溯
+    while (len1-- > 0) {
+        // 将result最后一个值，替换成
+        // last是result的值，但是是arr和p标签的下标
+        result[len1] = last;
+        // p中下标为last的值，就是arr中下标为last的值的前一个值的下标；p、result、last都是arr的下标
+        // 所以需要将last不停的置为前一个值的下标
+        last = p[last]
+    }
     return result
-
 }
 console.log(getSequence(arr));
 
@@ -113,4 +123,3 @@ console.log(getSequence(arr));
 // 如果比倒数第一个大，则push到数组后面
 // 如果比倒数第一个小，且比倒数第二个大，就替换倒数第一个值
 // 如果相等，不需要替换
-
