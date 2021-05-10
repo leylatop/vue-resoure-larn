@@ -23,10 +23,7 @@ export function createAppAPI(render) {
                 // 2. 通过render方法，把vnode渲染到容器上
                 render(vnode, container);
 
-
-
-                app._container = container;
-        
+                app._container = container;        
             }
         }
         return app

@@ -618,20 +618,24 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
                 }
 
         }
-
-
-
     }
+
+    // core的核心， 根据不同的虚拟节点，创建或移除真实的dom元素
     const render = (vnode, container) => {
-        // core的核心， 根据不同的虚拟节点，创建真实的dom元素
-
-        // 默认调用render，默认是初始化流程
-        // 初始化和更新都会走patch方法，所以会有之前的虚拟节点和现在的虚拟节点做diff算法
-        // 1. 第一个参数之前的虚拟节点
-        // 2. 第二个参数现在的虚拟节点
-        // 3. 第三个参数渲染到哪个容器上
-        patch(null, vnode, container);
+        // 虚拟节点为空，组件卸载
+        if(vnode == null) {
+            // unmount(container._vnode);
+        } else {
+            // 默认调用render，默认是初始化流程
+            // 初始化和更新都会走patch方法，所以会有之前的虚拟节点和现在的虚拟节点做diff算法
+            // 1. 第一个参数之前的虚拟节点
+            // 2. 第二个参数现在的虚拟节点
+            // 3. 第三个参数渲染到哪个容器上
+            debugger
+            patch(null, vnode, container);
+        }
     }
+
     return {
         // createAppAPI执行后返回一个createApp方法，并且成功的将render方法传到createApp里面去了
         // createApp执行后会返回一个app对象
