@@ -631,7 +631,6 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             // 1. 第一个参数之前的虚拟节点
             // 2. 第二个参数现在的虚拟节点
             // 3. 第三个参数渲染到哪个容器上
-            debugger
             patch(null, vnode, container);
         }
     }
