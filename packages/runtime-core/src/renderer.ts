@@ -107,6 +107,20 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
 
     }
 
+    const shouldUpdateComponent = () => {
+
+    }
+
+    // 组件更新
+    const updateComponet = (n1, n2, container) => {
+        const instance = (n2.component = n1.component);     // 组件类型一致，进行复用
+        // 组件的属性 插槽是否有变化 有变化就进行更新组件
+        // if(shouldUpdateComponent(n1, n2, optimized)) {
+
+        // }
+        instance.next = n2; 
+    }
+
 
     // 组件处理
     // 1. 第一个参数之前的虚拟节点
@@ -120,7 +134,7 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         }
         // 组件更新流程
         else {
-            // updateComponet(n1, n2, container)
+            updateComponet(n1, n2, container)
         }
     }
     // ----------------------------------组件处理----------------------------------------------------
