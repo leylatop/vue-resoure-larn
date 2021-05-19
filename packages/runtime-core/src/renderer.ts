@@ -113,12 +113,15 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
 
     // 组件更新
     const updateComponet = (n1, n2, container) => {
+        debugger
         const instance = (n2.component = n1.component);     // 组件类型一致，进行复用
         // 组件的属性 插槽是否有变化 有变化就进行更新组件
         // if(shouldUpdateComponent(n1, n2, optimized)) {
 
         // }
         instance.next = n2; 
+        // inval
+        instance.update()
     }
 
 

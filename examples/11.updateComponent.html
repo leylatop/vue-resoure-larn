@@ -29,6 +29,7 @@
             setup(props, context) {
                 const state = reactive({ name: 'qiao' });
                 setTimeout(() => {
+                    debugger
                     state.name = 'xiaoqiao'
                 }, 1000)
                 return () => {
@@ -46,6 +47,14 @@
 
         // 父组件传给子组件的属性发生变化
         // 子组件在dom树里使用了属性
+
+        // 组件更新步骤
+        // 首先判断是否应该更新shouldUpdateComponent
+        // 
+        // 1. 将最新的虚拟节点,赋给实例的next 属性 instance.next = n2;
+        // 2. 将子组件的update方法对应的更新队列中的那一项移除掉 invalidateJob 防止重复更新
+        // 3. 强制调用子组件的instance.update()方法 更新组件
+        // 4. 更新组件的属性 updateComponentPreRender
     </script>
 </body>
 
