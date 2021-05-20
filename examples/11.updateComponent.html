@@ -55,6 +55,9 @@
         // 2. 将子组件的update方法对应的更新队列中的那一项移除掉 invalidateJob 防止重复更新
         // 3. 强制调用子组件的instance.update()方法 更新组件
         // 4. 更新组件的属性 updateComponentPreRender
+
+        // 当组件的props更新了之后，更新props的时候会更新一次，刷新视图的时候会再次更新一次
+        // 为了防止重复刷新，移除掉组件更新属性时的更新事件
     </script>
 </body>
 
