@@ -4,10 +4,12 @@
 
 import { effect } from '@vue/reactivity/src';
 import { ShapeFlags } from '@vue/shared/src';
-import { createLogicalAnd } from 'typescript';
+import { createLogicalAnd, updatePropertySignature } from 'typescript';
 import { createAppAPI } from "./apiCreateApp"
 import { createComponentInstance, setupComponent } from './component';
-import { queueJob } from './scheduler';
+import { updateProps } from './componentProps';
+import { updateSlots } from './componentSlots';
+import { invalidateJob, queueJob } from './scheduler';
 import { normalizeVNode, Text } from './vnode';
 
 // createRenderer 目的就是一个渲染器
@@ -25,6 +27,17 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
     } = rendererOPtions;
 
     // ----------------------------------组件处理----------------------------------------------------
+    const updateComponentPreRender = (instance, nextVNode, optimized=false) => {
+        nextVNode.component = instance;
+        const prevProps = instance.vnode.props;
+        instance.vnode = nextVNode;
+        instance.next = null;
+        // 更新组件的props
+        updateProps(instance, nextVNode.props, prevProps)
+
+        // 更新组件的插槽（也就是更新组件的儿子）
+        updateSlots(instance, nextVNode.children);
+    }
     // 组件渲染
     // 渲染的effect, 创建一个effect并执行render函数
     // render方法中拿到的数据会收集这个effect，属性更新时， effect会重新执行
@@ -63,6 +76,15 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             } else {
                 // 2. 这里是更新渲染
                 // 更新使用effect的shceduler方法
+                let {next, vnode} = instance;
+                let originNext = next;
+
+                if(next) {
+                    next.el = vnode.el;
+                    updateComponentPreRender(instance, next)
+                } else {
+                    next = vnode;
+                }
 
                 // 上一次的树
                 let preTree = instance.subTree;
@@ -112,14 +134,16 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
     }
 
     // 组件更新
-    const updateComponet = (n1, n2, container) => {
-        debugger
+    const updateComponent = (n1, n2, container) => {
         const instance = (n2.component = n1.component);     // 组件类型一致，进行复用
         // 组件的属性 插槽是否有变化 有变化就进行更新组件
         // if(shouldUpdateComponent(n1, n2, optimized)) {
 
         // }
         instance.next = n2; 
+
+        // 删除组件的update方法对应的effect队列中的方法，防止重复更新
+        invalidateJob(instance.update)
         // inval
         instance.update()
     }
@@ -137,7 +161,7 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
         }
         // 组件更新流程
         else {
-            updateComponet(n1, n2, container)
+            updateComponent(n1, n2, container)
         }
     }
     // ----------------------------------组件处理----------------------------------------------------
