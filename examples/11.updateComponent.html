@@ -1,3 +1,11 @@
+<!--
+ * @Author: your name
+ * @Date: 2021-05-22 12:55:00
+ * @LastEditTime: 2021-05-22 12:55:55
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \undefinedd:\learn-qxx\vue-resoure-self\examples\11.updateComponent.html
+-->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -53,9 +61,13 @@
         // 
         // 1. 将最新的虚拟节点,赋给实例的next 属性 instance.next = n2;
         // 2. 将子组件的update方法对应的更新队列中的那一项移除掉 invalidateJob 防止重复更新
-        // 3. 强制调用子组件的instance.update()方法，执行effect，更新组件
+        // 3. 强制调用子组件的instance.update()方法 更新组件
         // 4. 更新组件的属性和插槽 updateComponentPreRender
         // 5. 调用patch方法进行更新
+        
+
+        // 当组件的props更新了之后，更新props的时候会更新一次，刷新视图的时候会再次更新一次
+        // 为了防止重复刷新，移除掉组件更新属性时的更新事件
     </script>
 </body>
 
