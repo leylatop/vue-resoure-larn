@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2021-04-24 15:02:30
+ * @LastEditTime: 2021-05-20 00:17:58
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \vue-resoure-self\packages\runtime-core\src\scheduler.ts
+ */
 let queue = [];
 
 // 核心就是把effect所有要更新的方法放到一起，最后调一次
@@ -17,12 +25,12 @@ function queueFlush() {
     // 开启自动刷新，默认不开启
     if (!isFlushPending) {
         isFlushPending = true;
-        Promise.resolve().then(flashJobs);
+        Promise.resolve().then(flushJobs);
     }
 }
 
 // 清空任务
-function flashJobs() {
+function flushJobs() {
     isFlushPending = false;
     // 清空时，需要让queue做一个排序，排序根据id进行排序，然后按照顺序依次刷新
     // 比如说，多个组件更新，可能是先更新子组件，又更新父组件，又更新子组件
@@ -39,4 +47,12 @@ function flashJobs() {
 
     // 清空队列
     queue.length = 0;
+}
+
+// 删除队列中的某一个
+export function invalidateJob(job) {
+    const i = queue.indexOf(job);
+    if (i > -1) {
+        queue.splice(i, 1);
+    }
 }
