@@ -100,6 +100,7 @@ export function setupComponent(instance) {
     }
 }
 
+export let currentInstance = null;
 // 调用实例的setup方法,并且将setup方法的返回值填充到实例的setupState属性上
 function setupStatefulComponent(instance) {
     // 1. 代理,涉及到传递给render函数的参数（当访问实例上的属性时，可以直接被代理到proxy上）
@@ -112,12 +113,14 @@ function setupStatefulComponent(instance) {
     
     // 3.判断setup是否存在，若不存在，则直接执行render，若存在，则执行setup
     if(setup) {
+        currentInstance = instance; // 执行setup时，将当前instance设置到 currentInstance
         // 1. 创建一个setup的上下文(和instance不是一个东西)
         let setupContext = createSetupContext(instance);
 
         // 2. 调用setup，拿到返回值
         const setupResult = setup(instance.props, setupContext);    // instance中props attrs slots exmit expose 会被提取出来，因为在开发过程中会使用这些属性
 
+        currentInstance = null;     // setup执行完毕后，置空
         // 3. 判断setupResult的数据类型，若是function，则返回值就是render，若是对象，则是实例的setupState属性值，并且将值赋到实例对象属性上面
         handleSetupResult(instance, setupResult);
     } else {
