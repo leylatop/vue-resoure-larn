@@ -4,6 +4,7 @@ import { isFunction, isObject } from '@vue/shared/src';
 import { ShapeFlags } from "@vue/shared/src";
 import { PublicInstanceProxyHandlers } from "./componentPublicInstance";
 
+
 // const vnode = {
 //     "_v_isVnode": true,
 //     "type": {
@@ -100,7 +101,9 @@ export function setupComponent(instance) {
     }
 }
 
+// 正在执行setup的实例，执行前赋值，执行后清除
 export let currentInstance = null;
+
 // 调用实例的setup方法,并且将setup方法的返回值填充到实例的setupState属性上
 function setupStatefulComponent(instance) {
     // 1. 代理,涉及到传递给render函数的参数（当访问实例上的属性时，可以直接被代理到proxy上）

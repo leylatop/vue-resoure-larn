@@ -12,7 +12,7 @@
     <div id="app"></div>
     <script src="../node_modules/@vue/runtime-dom/dist/runtime-dom.global.js"></script>
     <script>
-        const { createApp, h, reactive, ref, setup, onBeforeMount, onMount, onBeforeUpdate, onUpdated} = VueRuntimeDOM;
+        const { createApp, h, reactive, ref, setup, onBeforeMount, onMounted, onBeforeUpdate, onUpdated} = VueRuntimeDOM;
         let Content = {
             setup(props) {
 
@@ -22,13 +22,28 @@
             }
         }
         let App = {
-            // props: {};
             setup(props, context) {
-
+                // breforeCreate created 由setup取代
                 const state = reactive({ name: 'qiao' });
                 setTimeout(() => {
                     state.name = 'xiaoqiao'
                 }, 1000)
+
+                onBeforeMount(() => {
+                    console.log('onBeforeMount')
+                })
+
+                onMounted(() => {
+                    console.log('onMounted')
+                })
+
+                onBeforeUpdate(() => {
+                    console.log('onBeforeUpdate')
+                })
+
+                onUpdated(() => {
+                    console.log('onUpdated')
+                })
                 return () => {
                     return h('div', {}, h(Content, { name: state.name }))
                 }
@@ -39,7 +54,9 @@
         app.mount('#app');
 
         // 组件实例收集钩子函数及其对应的方法
-        // 一个实例可以收集多个狗子
+        // 一个实例可以收集多个钩子
+
+        // 执行钩子函数时，先执行父组件的before，再执行子组件的before 先执行子组件的mounted 再执行父组件的mounted
     </script>
 </body>
 
