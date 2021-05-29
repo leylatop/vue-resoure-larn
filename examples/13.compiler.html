@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app"></div>
+    <script src="../node_modules/@vue/compiler-dom/dist/compiler-dom.global.js"></script>
+    <script>
+        const {baseCompile} = VueCompilerDOM;
+
+        // 转化一个字符串
+        let ast = baseCompile('hello');
+
+        
+
+
+
+        
+        // vue3可以直接写render函数，使用h方法来生成虚拟节点，但是这并不友好，如果dom元素太多，写起来会很恶心
+        // 所以我们采用jsx语法，经过模板编译的过程，最终编译成h方法；传统的jsx没有语法
+
+        // vue2的模板编译用了大量的正则
+
+        // vue3 template可以转化成render函数，而且具备了优化的特点，patchflag，blockTree
+        // vue3 template转化成render函数的三个步骤：
+        // 1. 把html解析成抽象语法树（ast），这个树可以描述整个html的代码，进而转成js代码
+        // 2. 转化ast树，加标记和进行优化（根据具体的vue代码完善ast树，标记动态）
+        // 3. 生成render函数
+
+
+    </script>
+</body>
+
+</html>
