@@ -6,6 +6,7 @@ import { effect } from '@vue/reactivity/src';
 import { ShapeFlags } from '@vue/shared/src';
 import { createLogicalAnd, updatePropertySignature } from 'typescript';
 import { createAppAPI } from "./apiCreateApp"
+import { invokeArrayFns } from './apiLifecycle';
 import { createComponentInstance, setupComponent } from './component';
 import { updateProps } from './componentProps';
 import { updateSlots } from './componentSlots';
@@ -27,9 +28,14 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
     } = rendererOPtions;
 
     // ----------------------------------组件处理----------------------------------------------------
+    // 组件更新时处理组件
+    // 第一个参数是组件实例
+    // 第二个参数是组件新的虚拟节点
     const updateComponentPreRender = (instance, nextVNode, optimized=false) => {
         nextVNode.component = instance;
+        // 组件之前的props
         const prevProps = instance.vnode.props;
+        // 更新组件的虚拟节点为新的虚拟节点
         instance.vnode = nextVNode;
         instance.next = null;
         // 更新组件的props
@@ -47,9 +53,11 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
             // 判断是否被挂载
             // 1. 若没有被挂载过，则说明是第一次渲染
             if (!instance.isMounted) {
-                // 初次渲染结束后 instance.isMounted设置成true
-                instance.isMounted = true;
-
+                const {bm, m} = instance;
+                // 初次渲染之前执行beforeMount
+                if(bm) {
+                    invokeArrayFns(bm);
+                }
                 // 执行render，拿到返回结果
                 let proxyToUse = instance.proxy;
 
@@ -73,12 +81,25 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
 
                 // 用render函数的返回值，也就是子树进行渲染
                 patch(null, subTree, container);
+                // 初次渲染结束后 instance.isMounted设置成true
+                instance.isMounted = true;
+                // 初次渲染之后执行mounted
+                // 此时父组件执行到这里，并不能保证子组件能执行完毕
+                // onMounted必须要求在子组件执行完成后再执行，需要延迟执行
+                // 但是此时写的是同步渲染，不需要考虑异步的情况，所以这种写法可以满足
+                if(m) {
+                    invokeArrayFns(m);
+                }
             } else {
+                const {bu, u} = instance;
+                // 更新之前执行beforeUpdate
+                if(bu) {
+                    invokeArrayFns(bu);
+                }
                 // 2. 这里是更新渲染
                 // 更新使用effect的shceduler方法
                 let {next, vnode} = instance;
                 let originNext = next;
-
                 if(next) {
                     next.el = vnode.el;
                     updateComponentPreRender(instance, next)
@@ -93,6 +114,10 @@ export function createRenderer(rendererOPtions) {  //告诉core怎么渲染
                 // 上一次的树和这一次的树进行更新
                 patch(preTree, nextTree, container);
 
+                // 更新之后执行updated
+                if(u) {
+                    invokeArrayFns(u);
+                }
                 // 核心
                 // - diff算法
                 // - 序列优化

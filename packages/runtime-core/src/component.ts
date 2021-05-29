@@ -102,7 +102,20 @@ export function setupComponent(instance) {
 }
 
 // 正在执行setup的实例，执行前赋值，执行后清除
+
 export let currentInstance = null;
+// currentInstance永远指向正在执行setup的函数
+// 1. 在执行beforeMount阶段时， currentInstance 最先指向的是父组件，再指向的是子组件
+// 2. 接下来执行mounted阶段，此时 currentInstance 已经指向了子组件
+// 3. 所以我们希望能在生命周期钩子函数内能获取到 currentInstance 
+// 4. 因此增加两个设置和获取instance的方法
+export let setCurrentInstance = (instance) => {
+    currentInstance = instance;
+}
+
+export let getCurrentInstance = () => {    // 在setup中获取当前实例，可以通过这个方法获取当前实例
+    return currentInstance;
+}
 
 // 调用实例的setup方法,并且将setup方法的返回值填充到实例的setupState属性上
 function setupStatefulComponent(instance) {

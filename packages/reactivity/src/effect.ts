@@ -16,6 +16,26 @@ export function effect(fn, options: any = {}) {
 
     return effect;
 }
+// 是否停止收集依赖
+// 在某些时候我们希望暂停收集,比如在生命周期钩子函数执行的时候
+let shouldTrack = true;
+const trackStack= [];
+
+export function pauseTracking() {
+  trackStack.push(shouldTrack)
+  shouldTrack = false
+}
+
+export function enableTracking() {
+  trackStack.push(shouldTrack)
+  shouldTrack = true
+}
+
+
+export function resetTracking() {
+  const last = trackStack.pop()
+  shouldTrack = last === undefined ? true : last
+}
 
 // 全局变量
 let uid = 0;
@@ -92,6 +112,10 @@ const targetMap = new WeakMap();
 // map的值是 一个map
 // 只有在effect取值的属性才走这里，收集依赖的函数
 export function track(target, type, key) {
+    // 是否停止收集依赖
+    if(!shouldTrack) {
+        return;
+    }
     // 可以拿到当前的effect
     // 如果当前activeEffect为空，则表示不用收集
     if (activeEffect === undefined) {

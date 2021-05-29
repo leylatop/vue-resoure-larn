@@ -12,10 +12,36 @@
     <div id="app"></div>
     <script src="../node_modules/@vue/runtime-dom/dist/runtime-dom.global.js"></script>
     <script>
-        const { createApp, h, reactive, ref, setup, onBeforeMount, onMounted, onBeforeUpdate, onUpdated} = VueRuntimeDOM;
+        const { createApp, h, reactive, ref, setup, onBeforeMount, onMounted, onBeforeUpdate, onUpdated, getCurrentInstance} = VueRuntimeDOM;
+        // 执行顺序
+        // 渲染阶段
+        // 父：onBeforeMount
+        // 子：onBeforeMount
+        // 子：onMounted
+        // 父：onMounted
+
+        // 更新阶段
+        // 父：onBeforeUpdate
+        // 子：onBeforeUpdate
+        // 子：onUpdated
+        // 父：onUpdated
         let Content = {
             setup(props) {
+                onBeforeMount(() => {
+                    console.log('onBeforeMount')
+                })
 
+                onMounted(() => {
+                    console.log('onMounted')
+                })
+
+                onBeforeUpdate(() => {
+                    console.log('onBeforeUpdate')
+                })
+
+                onUpdated(() => {
+                    console.log('onUpdated')
+                })
             },
             render() {
                 return h('p', {}, this.name);
