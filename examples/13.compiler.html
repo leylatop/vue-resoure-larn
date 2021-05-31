@@ -15,7 +15,8 @@
         const {baseCompile} = VueCompilerDOM;
 
         // 转化一个字符串
-        let ast = baseCompile('hello');
+        let ast = baseCompile(`he
+        llo<div></div>{{name}}`);
 
         
 
