@@ -1,5 +1,39 @@
 import { parseJsonText } from "typescript";
 
+export const enum NodeTypes {
+    ROOT,
+    ELEMENT,
+    TEXT,
+    COMMENT,
+    SIMPLE_EXPRESSION,
+    INTERPOLATION,
+    ATTRIBUTE,
+    DIRECTIVE,
+    // containers
+    COMPOUND_EXPRESSION,
+    IF,
+    IF_BRANCH,
+    FOR,
+    TEXT_CALL,
+    // codegen
+    VNODE_CALL,
+    JS_CALL_EXPRESSION,
+    JS_OBJECT_EXPRESSION,
+    JS_PROPERTY,
+    JS_ARRAY_EXPRESSION,
+    JS_FUNCTION_EXPRESSION,
+    JS_CONDITIONAL_EXPRESSION,
+    JS_CACHE_EXPRESSION,
+
+    // ssr codegen
+    JS_BLOCK_STATEMENT,
+    JS_TEMPLATE_LITERAL,
+    JS_IF_STATEMENT,
+    JS_ASSIGNMENT_EXPRESSION,
+    JS_SEQUENCE_EXPRESSION,
+    JS_RETURN_STATEMENT
+}
+
 function createParserContext(content) {
     // 创建初始值
     return {
@@ -42,18 +76,25 @@ function parseTextData(context, endIndex) {
 
 function advancePositionWithMutation(context, source, endIndex) {
     // 1. 更新行数（根据换行符来计算）
-    let lineCount = 1; 
+    let lineCount = 0;
+    let linePos = -1;   // 换行的次数，默认为没有换过行
     for (let i = 0; i < endIndex; i++) {
         // 换行\n对应的是10，遇到换行就++
-        if(source.charCodeAt(i) == 10) {
+        if (source.charCodeAt(i) == 10) {
             lineCount++
+            linePos = i;    // 换行后第一个人的位置
         }
     }
-    console.log(lineCount)
+    context.line += lineCount;
+
     // 2. 更新列数
-    
+    // 每次换行的时候记住每一行的开始的位置，用最终的结束减去开始的位置，就知道列数
+    // 如果linePos值为-1，则说明没有换行，直接使用原来的column加上endIndex
+    // 如果linePos的值不为1，则linePos为最后一次换行后的第一个人在字符串中的位置，本质上是字符串中最后一个\n的下标，拿总的endIndex - linePos,就得到最后一行的总个数，即总列数
+    context.column = linePos == -1 ? context.column + endIndex : endIndex - linePos;
 
     // 3. 更新偏移量
+    context.offset += endIndex;
 }
 // 更新上下文的source
 function advanceBy(context, endIndex) {
@@ -65,7 +106,19 @@ function advanceBy(context, endIndex) {
     advancePositionWithMutation(context, source, endIndex);
 
     // 删除endIndex之前的部分，为新的source
-    context.source = source.slice(endIndex);
+    context.source = source.slice(endIndex);    
+}
+
+// 获取信息对应的开始、结束、内容
+function getSelection(context, start) {
+    let end = getCursor(context);
+    console.log(context);
+    
+    return {
+        start,
+        end,
+        source: context.originSource.slice(start.offset, end.offset)    // 这里计算的是子元素原本的source，从originSource中截取的
+    }
 }
 
 // 解析文本类型
@@ -102,8 +155,15 @@ function parseText(context) {
     const content = parseTextData(context, endIndex);
 
     // 更新source， source进行前进，即删除source前面已经解析过的部分
+    // 并且更新行列信息
     advanceBy(context, endIndex);
     /******************************************更新行列信息******************************************/
+
+    return {
+        type:NodeTypes.TEXT,
+        content,
+        loc: getSelection(context, start)
+    }
 }
 
 // 解析上下文的儿子
@@ -128,7 +188,7 @@ function parseChildren(context) {
             node = parseInterpolation(context);
         } else {
             node = parseText(context)
-            break
+            // break
         }
         nodes.push(node)
     }
@@ -155,5 +215,7 @@ function baseParse(template) {
 // 在模板编译阶段，会默认在最外层添加一个对象，若有多个根元素，都是最外层对象的content
 export function baseCompile(template) {
     let ast = baseParse(template);
+    console.log(ast);
+
     return ast;
 }
