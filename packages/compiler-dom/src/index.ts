@@ -58,7 +58,7 @@ function parseElement(context) {
 
 // 解析vue表达式
 function parseInterpolation(context) {
-
+    console.log(context)
 }
 
 // 获取当前上下文的行、列、偏移量
@@ -184,8 +184,10 @@ function parseChildren(context) {
         // ps:此处只了核心判断，除此之外可能还有注释等特殊情况
         if (s[0] == '<') {
             node = parseElement(context);
+            // break
         } else if (s.startsWith('{{')) {
             node = parseInterpolation(context);
+            break
         } else {
             node = parseText(context)
             // break
