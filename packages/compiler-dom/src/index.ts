@@ -34,6 +34,7 @@ export const enum NodeTypes {
     JS_RETURN_STATEMENT
 }
 
+// 创建一个初始上下文
 function createParserContext(content) {
     // 创建初始值
     return {
@@ -58,7 +59,57 @@ function parseElement(context) {
 
 // 解析vue表达式
 function parseInterpolation(context) {
-    console.log(context)
+    // 表达式以{{开头，以}}结尾，中间的是表达式的内容
+    // 表达式的type是5， NodeTypes.SIMPLE_EXPRESSION
+    // 表达式的内容的type是4，NodeTypes.COMMENT
+
+    // 开始位置为0，取一次默认的line column offset
+    const start = getCursor(context);
+    // 结束位置 获取source中}} 的位置，以 }} 标识
+    const closeIndex = context.source.indexOf("}}", "{{");  //从{{ 开始查找，找到}}
+
+    // source去掉前2个，前2个字符是{{
+    advanceBy(context, 2);
+
+    // 获取内容开始的位置(此时source已经前进了2个，所以line column offset 是内容开始的位置)
+    const innerStart = getCursor(context);
+    // 获取内容结束的位置
+    const innerEnd = getCursor(context);
+
+    // 内容的长度（包含空格）
+    const rowContentLength = closeIndex - 2;
+    // 内容（包含空格），endIndex为内容的长度
+    const preTrimContent = parseTextData(context, rowContentLength);
+    // 内容（去掉前后空格）
+    const content = preTrimContent.trim();
+
+    // 计算出去空格后的内容，在原始内容中的偏移量
+    const startOffset = preTrimContent.indexOf(content);
+    
+    
+    // 前面有空格， 更新实际内容开始的位置 innerStart
+    if(startOffset > 0) {
+        advancePositionWithMutation(innerStart, preTrimContent, startOffset);
+    }
+
+    // 更新innerEnd，使用innerStart开始的位置（startOffset）+去掉空格后文本的长度，即为文本最中的位置
+    const end = startOffset + content.length;
+    advancePositionWithMutation(innerEnd, preTrimContent, end);
+    debugger
+    // source去掉最后2个，最后2个字符是}},此时source的值为空
+    advanceBy(context, 2);
+    
+    return {
+        type: NodeTypes.INTERPOLATION,
+        content: {
+            type: NodeTypes.SIMPLE_EXPRESSION,
+            isStatic: false,
+            loc: getSelection(context, innerStart, innerEnd)
+        },
+        loc: getSelection(context, start)
+    }    
+
+    
 }
 
 // 获取当前上下文的行、列、偏移量
@@ -67,13 +118,21 @@ function getCursor(context) {
     return { line, column, offset }
 }
 
-// 获取上下文中的source的文本
+// 获取上下文中的source文本的0到endIndex之间的内容
 function parseTextData(context, endIndex) {
     const rawText = context.source.slice(0, endIndex);  //从0到endIndex之间的则为文本的内容
+
+    // 解析完文本之后，需要把source中解析过的文本删除掉
+    // 更新source， source进行前进，即删除source前面已经解析过的部分
+    // 并且更新行列信息
+    advanceBy(context, endIndex);
     return rawText
 }
 
-
+// 更新开始位置或结束位置的行、列、偏移量
+// 第一个参数为开始位置或者结束位置的上下文
+// 第二个参数为被解析的文本
+// 第三个参数为解析结束的位置
 function advancePositionWithMutation(context, source, endIndex) {
     // 1. 更新行数（根据换行符来计算）
     let lineCount = 0;
@@ -110,14 +169,13 @@ function advanceBy(context, endIndex) {
 }
 
 // 获取信息对应的开始、结束、内容
-function getSelection(context, start) {
-    let end = getCursor(context);
-    console.log(context);
+function getSelection(context, start, end?) {
+    end = end || getCursor(context);
     
     return {
         start,
         end,
-        source: context.originSource.slice(start.offset, end.offset)    // 这里计算的是子元素原本的source，从originSource中截取的
+        source: context.originSource.slice(start.offset, end.offset)    // 这里计算的是去掉空格后的内容，从originSource中截取的
     }
 }
 
@@ -154,9 +212,6 @@ function parseText(context) {
     // 获取文本
     const content = parseTextData(context, endIndex);
 
-    // 更新source， source进行前进，即删除source前面已经解析过的部分
-    // 并且更新行列信息
-    advanceBy(context, endIndex);
     /******************************************更新行列信息******************************************/
 
     return {
@@ -187,6 +242,8 @@ function parseChildren(context) {
             // break
         } else if (s.startsWith('{{')) {
             node = parseInterpolation(context);
+            console.log(node);
+            
             break
         } else {
             node = parseText(context)

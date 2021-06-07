@@ -15,7 +15,10 @@
         const {baseCompile} = VueCompilerDOM;
 
         // 转化一个字符串
-        let ast = baseCompile(`{{name}}`);
+        // let ast = baseCompile(`hello world`);
+
+        // 转化一个表达式
+        let ast = baseCompile(`{{  name  }}`);
         console.log(ast)
 
         
