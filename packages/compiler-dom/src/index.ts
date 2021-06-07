@@ -52,9 +52,51 @@ function isEnd(context) {
     return !source;
 }
 
+// 删除多余的空格
+function anvanceSpances(context) {
+    const match = /^[\s\t\r\n]+/.exec(context.source);  // 匹配空格
+    // match ["    "]
+    if(match) {
+        advanceBy(context, match[0].length)
+    }
+}
+
+function parseTag(context) {
+    // 获取开始位置
+    const start = getCursor(context);
+    // \/的意思可能是开始标签也有可能是结束标签，所以后面加一个?
+    // \s 空格
+    // \t tab键
+    // \r \n 换行
+    // /自闭合标签
+    const match = /^<\/?([a-z][^\s\t\r\n/>]*)/.exec(context.source);   //match是所有符合条件的字符
+    //match  ["<div", "div", index: 0, input: "<div>hahaha</div>", groups: undefined]
+    
+    // element名称
+    const tag = match[1];
+
+    // 把解析过从source删除掉
+    advanceBy(context, match[0].length);
+    // 删除空格
+    anvanceSpances(context);
+
+    // 判断是否是自闭合标签
+    const isSelfClosing = context.source.startsWith('/>')
+
+    // 如果是自闭合就删掉2个（/>）, 否则就删掉1个（>）
+    advanceBy(context, isSelfClosing ? 2 : 1)
+    return {
+        type: NodeTypes.ELEMENT,
+        tag,
+        isSelfClosing,
+        loc: getSelection(context, start)
+    }
+}
+
 // 解析元素类型
 function parseElement(context) {
-
+    // 1. 解析标签名
+    parseTag(context);
 }
 
 // 解析vue表达式
@@ -156,16 +198,16 @@ function advancePositionWithMutation(context, source, endIndex) {
     context.offset += endIndex;
 }
 // 更新上下文的source
-function advanceBy(context, endIndex) {
+function advanceBy(context, length) {
     // 未删除之前的source
     let source = context.source;
 
     // 计算出一个新的结束位置
-    // 根据内容和结束索引来修改上下文的信息
-    advancePositionWithMutation(context, source, endIndex);
+    // 根据内容和内容结束的位置来修改上下文的信息
+    advancePositionWithMutation(context, source, length);
 
-    // 删除endIndex之前的部分，为新的source
-    context.source = source.slice(endIndex);    
+    // 删除之后的length的那部分，为新的source
+    context.source = source.slice(length);    
 }
 
 // 获取信息对应的开始、结束、内容
@@ -239,7 +281,9 @@ function parseChildren(context) {
         // ps:此处只了核心判断，除此之外可能还有注释等特殊情况
         if (s[0] == '<') {
             node = parseElement(context);
-            // break
+            console.log(node);
+            
+            break
         } else if (s.startsWith('{{')) {
             node = parseInterpolation(context);
             console.log(node);
@@ -265,7 +309,6 @@ function baseParse(template) {
 
     // 解析模板的儿子，传入context是因为context已经包含了所有的信息
     return parseChildren(context)
-    console.log(context)
 
 
 }
@@ -274,7 +317,6 @@ function baseParse(template) {
 // 在模板编译阶段，会默认在最外层添加一个对象，若有多个根元素，都是最外层对象的content
 export function baseCompile(template) {
     let ast = baseParse(template);
-    console.log(ast);
 
     return ast;
 }
