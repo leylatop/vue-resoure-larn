@@ -20,16 +20,27 @@
         // 转化一个表达式
         // let ast = baseCompile(`{{  name  }}`);
 
-        // 转化元素
-        let ast = baseCompile(`<div    >hahaha</div>`);
+        // 转化没有子元素、没有属性的元素
+        // let ast = baseCompile(`<div    ></div>`);
+
+
+        // 转化有子元素的元素
+        // let ast = baseCompile(`<div><p></p>{{name}} hello</div>`);
+
+        // 转化多个根元素
+        // let ast = baseCompile(`
+        // 123123
+        // <a href=""></a>
+        // <b></b>`);
+
+
+
+        // transform阶段
+        let ast = baseCompile(`<div><p>hello</p></div>`);
 
         console.log(ast)
 
-        
 
-
-
-        
         // vue3可以直接写render函数，使用h方法来生成虚拟节点，但是这并不友好，如果dom元素太多，写起来会很恶心
         // 所以我们采用jsx语法，经过模板编译的过程，最终编译成h方法；传统的jsx没有语法
 
