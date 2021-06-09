@@ -36,7 +36,16 @@
 
 
         // transform阶段
-        let ast = baseCompile(`<div><p>hello</p></div>`);
+        // let ast = baseCompile(`<div><p>hello</p></div>`);
+
+        // 文本节点合并
+        // let ast = baseCompile(`hello {{neme}} <div></div> world {{nihao}}`);
+
+        
+        let ast = baseCompile(`hello <div></div> {{nihao}}`);
+
+
+        
 
         console.log(ast)
 

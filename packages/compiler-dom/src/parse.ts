@@ -8,7 +8,7 @@ export const enum NodeTypes {
     ATTRIBUTE,
     DIRECTIVE,
     // containers
-    COMPOUND_EXPRESSION,    // 组合表达式 {{name + age}}
+    COMPOUND_EXPRESSION,    // 组合表达式 'hello' {{name}}
     IF,
     IF_BRANCH,
     FOR,
@@ -162,6 +162,7 @@ function parseInterpolation(context) {
         type: NodeTypes.INTERPOLATION,
         content: {
             type: NodeTypes.SIMPLE_EXPRESSION,
+            content,
             isStatic: false,
             loc: getSelection(context, innerStart, innerEnd)
         },
